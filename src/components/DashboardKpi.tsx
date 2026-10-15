@@ -17,7 +17,7 @@ interface DashboardKpiProps {
 
 export const DashboardKpi: React.FC<DashboardKpiProps> = ({ stats, mode }) => {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
       {/* 1. Total Requests */}
       <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3.5 backdrop-blur-sm">
         <div className="flex items-center justify-between text-slate-400 mb-1">

@@ -26,6 +26,7 @@ interface HeaderProps {
   onResetData: () => void;
   userSession: UserSession | null;
   onLogout: () => void;
+  onOpenProfile?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -38,7 +39,8 @@ export const Header: React.FC<HeaderProps> = ({
   isSimulating,
   onResetData,
   userSession,
-  onLogout
+  onLogout,
+  onOpenProfile
 }) => {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/90 bg-slate-950/90 backdrop-blur-md">
@@ -116,14 +118,14 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             type="button"
-            onClick={() => onTabChange('scorecard')}
+            onClick={() => onTabChange('rules')}
             className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-              activeTab === 'scorecard'
+              activeTab === 'rules'
                 ? 'bg-red-600 text-white font-bold shadow-sm shadow-red-900/40'
                 : 'text-slate-300 hover:text-white hover:bg-slate-900'
             }`}
           >
-            Scorecard
+            WAF Rules
           </button>
 
           <button
@@ -146,19 +148,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Zone 3: Control Actions & Operator Session */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          {/* Mode Toggle Button */}
-          <button
-            type="button"
-            onClick={onToggleMode}
-            className={`px-2.5 py-1.5 text-xs font-mono font-bold rounded-lg border transition-colors cursor-pointer ${
-              mode === 'block'
-                ? 'bg-red-950/80 border-red-700/80 text-red-300 hover:bg-red-900/80'
-                : 'bg-amber-950/80 border-amber-700/80 text-amber-300 hover:bg-amber-900/80'
-            }`}
-            title={`Gateway Mode: ${mode.toUpperCase()} (Click to toggle)`}
-          >
-            {mode === 'block' ? 'MODE: BLOCK' : 'MODE: MONITOR'}
-          </button>
 
           {/* Reset Telemetry Button */}
           <button
@@ -183,16 +172,32 @@ export const Header: React.FC<HeaderProps> = ({
             <span>{isSimulating ? 'Testing...' : 'Run 12-Probe Suite'}</span>
           </button>
 
-          {/* Operator Logout */}
+          {/* Operator Profile & Logout Controls */}
           {userSession && (
-            <button
-              type="button"
-              onClick={onLogout}
-              className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-red-400 hover:border-red-900/50 transition-colors cursor-pointer"
-              title={`Logged in as ${userSession.roleName}. Click to logout.`}
-            >
-              <LogOut className="h-3.5 w-3.5" />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={onOpenProfile}
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/90 hover:bg-slate-800/90 hover:border-red-500/50 text-slate-200 text-xs font-mono transition-all cursor-pointer shadow-sm group"
+                title="View Operator Profile & Clearance Details"
+              >
+                <div className="flex h-5 w-5 items-center justify-center rounded bg-red-950 border border-red-500/40 text-red-300 font-bold text-[10px]">
+                  {userSession.email.charAt(0).toUpperCase()}
+                </div>
+                <span className="hidden sm:inline font-semibold group-hover:text-red-300 transition-colors">
+                  Profile
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onLogout}
+                className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-red-400 hover:border-red-900/50 transition-colors cursor-pointer"
+                title={`Logged in as ${userSession.roleName}. Click to logout.`}
+              >
+                <LogOut className="h-3.5 w-3.5" />
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -222,10 +227,10 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
         <button
           type="button"
-          onClick={() => onTabChange('scorecard')}
-          className={`px-2.5 py-1 rounded whitespace-nowrap ${activeTab === 'scorecard' ? 'bg-red-600 text-white font-bold' : 'text-slate-400'}`}
+          onClick={() => onTabChange('rules')}
+          className={`px-2.5 py-1 rounded whitespace-nowrap ${activeTab === 'rules' ? 'bg-red-600 text-white font-bold' : 'text-slate-400'}`}
         >
-          Scorecard
+          WAF Rules
         </button>
         <button
           type="button"

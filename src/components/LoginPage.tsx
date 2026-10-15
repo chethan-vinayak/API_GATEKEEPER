@@ -8,7 +8,9 @@ import {
   Terminal,
   Zap,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { ApiGatekeeperLogo } from './ApiGatekeeperLogo.tsx';
 import { auth, googleProvider, signInWithPopup, doc, setDoc, db } from '../firebase.ts';
@@ -26,10 +28,11 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
-  const [email, setEmail] = useState('evaluator.secops@apigatekeeper.io');
-  const [token, setToken] = useState('gk_live_948a73b190f84ac2');
+  const [email, setEmail] = useState('');
+  const [token, setToken] = useState('');
   const [role, setRole] = useState<'commander' | 'auditor' | 'redteam'>('commander');
   const [isLoading, setIsLoading] = useState(false);
+  const [showToken, setShowToken] = useState(false);
 
   const roleDetails = {
     commander: {
@@ -100,20 +103,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleQuickDemo = (selectedRole: 'commander' | 'auditor' | 'redteam') => {
-    setIsLoading(true);
-    setTimeout(() => {
-      onLogin({
-        email: selectedRole === 'auditor' ? 'judge.evaluator@inno-hacks.org' : 'secops-lead@apigatekeeper.io',
-        role: selectedRole,
-        roleName: roleDetails[selectedRole].name,
-        clearance: roleDetails[selectedRole].clearance,
-        token: 'gk_live_demo_auth_token_2026'
-      });
-      setIsLoading(false);
-    }, 200);
   };
 
   return (
@@ -219,13 +208,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   <Key className="h-4 w-4" />
                 </div>
                 <input
-                  type="password"
+                  type={showToken ? "text" : "password"}
                   required
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
                   placeholder="gk_live_..."
-                  className="w-full pl-9 pr-3 py-2 bg-slate-950/80 border border-slate-800 rounded-lg text-sm text-slate-100 font-mono placeholder-slate-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                  className="w-full pl-9 pr-10 py-2 bg-slate-950/80 border border-slate-800 rounded-lg text-sm text-slate-100 font-mono placeholder-slate-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowToken(!showToken)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                  title={showToken ? "Hide token" : "Show token"}
+                >
+                  {showToken ? <EyeOff className="h-4 w-4 text-red-400" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 
@@ -279,36 +276,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               )}
             </button>
           </form>
-
-          {/* Quick 1-Click Judge & Evaluator Access */}
-          <div className="mt-6 pt-5 border-t border-slate-800/80">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3 text-amber-400" />
-                Instant Access for Hackathon Judges
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickDemo('auditor')}
-                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-amber-600/40 bg-amber-950/20 hover:bg-amber-950/40 text-amber-300 text-xs font-semibold transition-colors cursor-pointer"
-              >
-                <ShieldCheck className="h-3.5 w-3.5" />
-                <span>1-Click Judge Mode</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickDemo('commander')}
-                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-slate-800 bg-slate-950 hover:bg-slate-800 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
-              >
-                <Terminal className="h-3.5 w-3.5" />
-                <span>1-Click SOC Director</span>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Security Disclaimers */}

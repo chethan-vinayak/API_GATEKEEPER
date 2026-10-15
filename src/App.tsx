@@ -11,8 +11,9 @@ import { DashboardKpi } from './components/DashboardKpi.tsx';
 import { LiveAttackFeed } from './components/LiveAttackFeed.tsx';
 import { RequestLabView } from './components/RequestLabView.tsx';
 import { AttackSimulatorView } from './components/AttackSimulatorView.tsx';
-import { SecurityScorecardView } from './components/SecurityScorecardView.tsx';
+import { FirewallRulesView } from './components/FirewallRulesView.tsx';
 import { IncidentDrawer } from './components/IncidentDrawer.tsx';
+import { UserProfileModal } from './components/UserProfileModal.tsx';
 import { ShieldAlert } from 'lucide-react';
 import { db, collection, onSnapshot, doc, setDoc } from './firebase.ts';
 import type {
@@ -58,6 +59,7 @@ export default function App() {
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [simulationResults, setSimulationResults] = useState<any[] | null>(null);
   const [externalVoiceTrigger, setExternalVoiceTrigger] = useState<{ text: string } | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
 
   // Sync session to local storage
   const handleLogin = (session: UserSession) => {
@@ -112,36 +114,6 @@ export default function App() {
 
   useEffect(() => {
     refreshData();
-
-    // Subscribe to real-time Firestore incident updates
-    const unsubscribe = onSnapshot(collection(db, 'incidents'), (snapshot) => {
-      if (!snapshot.empty) {
-        const firestoreIncidents: SecurityEvent[] = [];
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          if (data && data.id && (data.ts || data.timestamp)) {
-            firestoreIncidents.push({
-              ...data,
-              ts: data.ts || data.timestamp || new Date().toISOString()
-            } as SecurityEvent);
-          }
-        });
-        if (firestoreIncidents.length > 0) {
-          firestoreIncidents.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
-          setEvents((prev) => {
-            // Merge Firestore incidents with existing in-memory events without duplicates
-            const map = new Map<string, SecurityEvent>();
-            prev.forEach(e => map.set(e.id, e));
-            firestoreIncidents.forEach(e => map.set(e.id, e));
-            return Array.from(map.values()).sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
-          });
-        }
-      }
-    }, (error) => {
-      console.warn('Firestore onSnapshot listener notice:', error);
-    });
-
-    return () => unsubscribe();
   }, []);
 
   // Handle Mode Toggle (BLOCK vs MONITOR)
@@ -252,6 +224,7 @@ export default function App() {
         onResetData={handleResetData}
         userSession={userSession}
         onLogout={handleLogout}
+        onOpenProfile={() => setIsProfileOpen(true)}
       />
 
       {/* Main Viewport Container */}
@@ -322,13 +295,11 @@ export default function App() {
           />
         )}
 
-        {/* TAB 4: Security Scorecard (No Prior Data until benchmark executed) */}
-        {activeTab === 'scorecard' && (
-          <SecurityScorecardView
-            scorecard={scorecard}
-            onRunScorecard={handleRunScorecard}
-            isLoading={false}
-            onVoiceDebrief={handleVoiceDebrief}
+        {/* TAB 4: WAF Policy & Firewall Rules Manager */}
+        {activeTab === 'rules' && (
+          <FirewallRulesView
+            onVoiceDebrief={(txt) => handleVoiceDebrief(txt)}
+            onRefreshData={refreshData}
           />
         )}
 
@@ -370,6 +341,20 @@ export default function App() {
           onClose={() => setInspectedEvent(null)}
           onVoiceDebrief={handleVoiceDebrief}
           isSpeaking={isSpeaking}
+        />
+      )}
+
+      {/* User Profile & Security Clearance Modal */}
+      {userSession && (
+        <UserProfileModal
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+          userSession={userSession}
+          onLogout={handleLogout}
+          onRoleChange={(newRole) => {
+            const updated = { ...userSession, role: newRole };
+            handleLogin(updated);
+          }}
         />
       )}
 
