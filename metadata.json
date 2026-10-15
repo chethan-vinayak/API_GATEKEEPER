@@ -1,0 +1,6 @@
+{
+  "name": "API Gatekeeper",
+  "description": "High-performance reverse-proxy security gateway with OpenAPI Contract Guard, OWASP CRS anomaly scoring, Response Shield, live attack analytics, and an AI Voice Assist Agent that debriefs security incidents.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
