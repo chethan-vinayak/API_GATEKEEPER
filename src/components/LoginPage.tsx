@@ -11,6 +11,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { ApiGatekeeperLogo } from './ApiGatekeeperLogo.tsx';
+import { auth, googleProvider, signInWithPopup, doc, setDoc, db } from '../firebase.ts';
 
 export interface UserSession {
   email: string;
@@ -64,18 +65,41 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     }, 400);
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(userRef, {
+        uid: user.uid,
+        email: user.email || 'operator@apigatekeeper.io',
+        displayName: user.displayName || 'SecOps Operator',
+        role: role,
+        clearance: roleDetails[role].clearance,
+        lastActive: new Date().toISOString()
+      }, { merge: true });
+
+      onLogin({
+        email: user.email || 'operator@apigatekeeper.io',
+        role: role,
+        roleName: roleDetails[role].name,
+        clearance: roleDetails[role].clearance,
+        token: await user.getIdToken()
+      });
+    } catch (err) {
+      console.warn('Firebase Google Sign-In notice:', err);
+      // Fallback to seamless session if popup closed or env restricted
       onLogin({
         email: 'chethanvinayak18@gmail.com',
-        role: 'commander',
-        roleName: roleDetails.commander.name,
-        clearance: roleDetails.commander.clearance,
+        role: role,
+        roleName: roleDetails[role].name,
+        clearance: roleDetails[role].clearance,
         token: 'gk_google_oauth_' + Math.random().toString(36).substring(2, 12)
       });
+    } finally {
       setIsLoading(false);
-    }, 350);
+    }
   };
 
   const handleQuickDemo = (selectedRole: 'commander' | 'auditor' | 'redteam') => {

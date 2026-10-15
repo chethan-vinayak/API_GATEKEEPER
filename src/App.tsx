@@ -14,6 +14,7 @@ import { AttackSimulatorView } from './components/AttackSimulatorView.tsx';
 import { SecurityScorecardView } from './components/SecurityScorecardView.tsx';
 import { IncidentDrawer } from './components/IncidentDrawer.tsx';
 import { ShieldAlert } from 'lucide-react';
+import { db, collection, onSnapshot, doc, setDoc } from './firebase.ts';
 import type {
   SecurityEvent,
   GatewayStats,
@@ -73,7 +74,7 @@ export default function App() {
     } catch {}
   };
 
-  // Fetch true gateway telemetry from backend
+  // Fetch true gateway telemetry from backend & sync to Firestore
   const refreshData = async () => {
     try {
       const [statsRes, eventsRes, modeRes] = await Promise.all([
@@ -87,8 +88,18 @@ export default function App() {
         setStats(s);
       }
       if (eventsRes.ok) {
-        const evts = await eventsRes.json();
+        const evts: SecurityEvent[] = await eventsRes.json();
         setEvents(evts);
+
+        // Async write events to Firestore incidents collection for real-time persistence
+        evts.slice(0, 20).forEach((evt) => {
+          try {
+            setDoc(doc(db, 'incidents', evt.id), {
+              ...evt,
+              updatedAt: new Date().toISOString()
+            }, { merge: true }).catch(() => {});
+          } catch {}
+        });
       }
       if (modeRes.ok) {
         const m = await modeRes.json();
@@ -101,6 +112,36 @@ export default function App() {
 
   useEffect(() => {
     refreshData();
+
+    // Subscribe to real-time Firestore incident updates
+    const unsubscribe = onSnapshot(collection(db, 'incidents'), (snapshot) => {
+      if (!snapshot.empty) {
+        const firestoreIncidents: SecurityEvent[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data && data.id && (data.ts || data.timestamp)) {
+            firestoreIncidents.push({
+              ...data,
+              ts: data.ts || data.timestamp || new Date().toISOString()
+            } as SecurityEvent);
+          }
+        });
+        if (firestoreIncidents.length > 0) {
+          firestoreIncidents.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+          setEvents((prev) => {
+            // Merge Firestore incidents with existing in-memory events without duplicates
+            const map = new Map<string, SecurityEvent>();
+            prev.forEach(e => map.set(e.id, e));
+            firestoreIncidents.forEach(e => map.set(e.id, e));
+            return Array.from(map.values()).sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+          });
+        }
+      }
+    }, (error) => {
+      console.warn('Firestore onSnapshot listener notice:', error);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Handle Mode Toggle (BLOCK vs MONITOR)
