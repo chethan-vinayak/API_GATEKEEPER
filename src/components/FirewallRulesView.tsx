@@ -14,14 +14,9 @@ import {
   Terminal,
   ChevronDown,
   ChevronUp,
-  FileText,
-  AlertTriangle,
-  Cpu,
   Bot,
   Gauge,
   Zap,
-  Activity,
-  Filter,
   ToggleLeft,
   ToggleRight,
   X
@@ -454,7 +449,6 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
     setDoc(doc(db, 'custom_rules', newRuleId), newRule).catch(() => {});
   };
 
-  // Toggle Rule Status
   const handleToggleRule = (id: string) => {
     setRules((prev) =>
       prev.map((r) => {
@@ -468,12 +462,10 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
     );
   };
 
-  // Expand / Collapse Rule
   const toggleExpand = (id: string) => {
     setExpandedRuleId(expandedRuleId === id ? null : id);
   };
 
-  // Release Ban IP
   const handleReleaseBan = async (ipToRelease: string) => {
     try {
       await fetch('/_gk/api/unban', {
@@ -497,7 +489,6 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
     onRefreshData?.();
   };
 
-  // Manual Ban Add
   const handleAddManualBan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newManualIp.trim()) return;
@@ -522,41 +513,39 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 animate-fade-in font-sans">
+    <div className="space-y-6 font-sans">
       {/* Toast Notification */}
       {actionSuccessMsg && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-slate-900 border border-emerald-500/80 text-emerald-300 text-xs font-mono font-bold shadow-2xl animate-bounce">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-slate-900 border border-emerald-500 text-emerald-300 text-xs font-mono font-bold shadow-2xl">
           <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
           <span>{actionSuccessMsg}</span>
         </div>
       )}
 
       {/* Header Banner */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 backdrop-blur-md shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1.5">
-            <Sliders className="h-5 w-5 text-red-400 shrink-0" />
-            <h1 className="text-xl font-black tracking-tight text-white uppercase font-sans">
+            <Sliders className="h-5 w-5 text-indigo-600 shrink-0" />
+            <h1 className="text-xl font-black tracking-tight text-slate-900 uppercase font-sans">
               WAF Firewall Policy & Rules Engine
             </h1>
           </div>
-          <p className="text-xs text-slate-400 leading-relaxed max-w-2xl font-sans">
+          <p className="text-xs text-slate-600 leading-relaxed max-w-2xl font-sans">
             Configure OWASP Core Rule Set inspection engines, custom operator security rules, bot sweep rate-limit thresholds, CWE mappings, and perimeter IP ban registries synced with Firestore.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0">
-          {/* Create Custom Rule Trigger */}
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-mono font-bold shadow-md shadow-red-950/60 transition-all cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-mono font-bold shadow-xs transition-all cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             <span>Create Custom Rule</span>
           </button>
 
-          {/* Voice Debrief Button */}
           <button
             type="button"
             onClick={() =>
@@ -568,52 +557,51 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
                 } requests per minute with ${botConfig.actionStrategy.replace('_', ' ').toUpperCase()} enforcement.`
               )
             }
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs font-mono font-bold shadow-md transition-all cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-mono font-bold shadow-2xs transition-all cursor-pointer"
           >
-            <Volume2 className="h-4 w-4 text-red-400" />
+            <Volume2 className="h-4 w-4 text-indigo-600" />
             <span>Policy Voice Brief</span>
           </button>
         </div>
       </div>
 
       {/* DEDICATED BOT DETECTION & RATE-LIMIT CONFIGURATION PANEL */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 backdrop-blur-md shadow-xl space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
           <div className="flex items-center gap-3">
             <div className={`p-2.5 rounded-xl border ${
               botConfig.enabled
-                ? 'bg-red-950/80 border-red-500/60 text-red-400'
-                : 'bg-slate-950 border-slate-800 text-slate-500'
+                ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                : 'bg-slate-50 border-slate-200 text-slate-400'
             }`}>
               <Bot className="h-6 w-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-black tracking-tight text-white uppercase font-sans">
+                <h2 className="text-base font-black tracking-tight text-slate-900 uppercase font-sans">
                   Automated Bot Detection & Rate-Limiting Policy
                 </h2>
                 <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
                   botConfig.enabled
-                    ? 'bg-emerald-950/80 border border-emerald-800/80 text-emerald-300'
-                    : 'bg-slate-950 border border-slate-800 text-slate-500'
+                    ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                    : 'bg-slate-50 border border-slate-200 text-slate-500'
                 }`}>
                   {botConfig.enabled ? 'Active Engine' : 'Disabled'}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5 font-sans">
+              <p className="text-xs text-slate-600 mt-0.5 font-sans">
                 Monitors client IP request frequency and User-Agent signatures to protect backend pools from automated scrapers and DDoS bursts.
               </p>
             </div>
           </div>
 
-          {/* Master Bot Toggle */}
           <button
             type="button"
             onClick={() => handleUpdateBotConfig({ enabled: !botConfig.enabled })}
             className={`px-4 py-2 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer flex items-center gap-2 ${
               botConfig.enabled
-                ? 'bg-red-600 hover:bg-red-500 text-white border-red-500 shadow-md shadow-red-950/50'
-                : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                ? 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-600 shadow-xs'
+                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
             }`}
           >
             {botConfig.enabled ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
@@ -621,16 +609,14 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
           </button>
         </div>
 
-        {/* Sliders & Thresholds Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-1">
-          {/* Slider 1: Requests Per Minute (RPM) Threshold */}
-          <div className="p-4 rounded-xl border border-slate-800/80 bg-slate-950/60 space-y-3">
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-3 shadow-2xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold font-mono text-slate-300 flex items-center gap-1.5 uppercase tracking-wider">
-                <Gauge className="h-4 w-4 text-red-400" />
-                Rate Limit Threshold (RPM)
+              <span className="text-xs font-bold font-mono text-slate-700 flex items-center gap-1.5 uppercase tracking-wider">
+                <Gauge className="h-4 w-4 text-indigo-600" />
+                Rate Limit (RPM)
               </span>
-              <span className="text-sm font-mono font-bold text-red-400 bg-red-950/80 px-2 py-0.5 rounded border border-red-900/60 tabular-nums">
+              <span className="text-sm font-mono font-bold text-indigo-700 bg-white px-2 py-0.5 rounded border border-slate-200 tabular-nums">
                 {botConfig.rateLimitRpm} req/min
               </span>
             </div>
@@ -641,23 +627,22 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
               step="5"
               value={botConfig.rateLimitRpm}
               onChange={(e) => handleUpdateBotConfig({ rateLimitRpm: parseInt(e.target.value) })}
-              className="w-full accent-red-500 bg-slate-900 h-2 rounded-lg cursor-pointer"
+              className="w-full accent-indigo-600 bg-slate-200 h-2 rounded-lg cursor-pointer"
             />
             <div className="flex justify-between text-[10px] font-mono text-slate-500">
-              <span>10 RPM (Strict)</span>
+              <span>10 RPM</span>
               <span>150 RPM</span>
-              <span>300 RPM (Relaxed)</span>
+              <span>300 RPM</span>
             </div>
           </div>
 
-          {/* Slider 2: Burst Window Duration */}
-          <div className="p-4 rounded-xl border border-slate-800/80 bg-slate-950/60 space-y-3">
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-3 shadow-2xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold font-mono text-slate-300 flex items-center gap-1.5 uppercase tracking-wider">
-                <Zap className="h-4 w-4 text-amber-400" />
-                Burst Window Duration
+              <span className="text-xs font-bold font-mono text-slate-700 flex items-center gap-1.5 uppercase tracking-wider">
+                <Zap className="h-4 w-4 text-amber-600" />
+                Burst Window
               </span>
-              <span className="text-sm font-mono font-bold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-900/60 tabular-nums">
+              <span className="text-sm font-mono font-bold text-amber-800 bg-white px-2 py-0.5 rounded border border-slate-200 tabular-nums">
                 {botConfig.burstWindowSec} Seconds
               </span>
             </div>
@@ -668,19 +653,18 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
               step="5"
               value={botConfig.burstWindowSec}
               onChange={(e) => handleUpdateBotConfig({ burstWindowSec: parseInt(e.target.value) })}
-              className="w-full accent-amber-500 bg-slate-900 h-2 rounded-lg cursor-pointer"
+              className="w-full accent-amber-600 bg-slate-200 h-2 rounded-lg cursor-pointer"
             />
             <div className="flex justify-between text-[10px] font-mono text-slate-500">
-              <span>5s Burst</span>
-              <span>30s Window</span>
-              <span>60s Window</span>
+              <span>5s</span>
+              <span>30s</span>
+              <span>60s</span>
             </div>
           </div>
 
-          {/* Enforcement Action Strategy Buttons */}
-          <div className="p-4 rounded-xl border border-slate-800/80 bg-slate-950/60 space-y-3">
-            <span className="block text-xs font-bold font-mono text-slate-300 uppercase tracking-wider">
-              Enforcement Strategy Action
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-3 shadow-2xs">
+            <span className="block text-xs font-bold font-mono text-slate-700 uppercase tracking-wider">
+              Enforcement Strategy
             </span>
             <div className="grid grid-cols-3 gap-1.5 pt-1">
               <button
@@ -688,8 +672,8 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
                 onClick={() => handleUpdateBotConfig({ actionStrategy: 'block_403' })}
                 className={`px-2 py-1.5 rounded-lg text-[11px] font-mono font-bold border text-center transition-all cursor-pointer ${
                   botConfig.actionStrategy === 'block_403'
-                    ? 'bg-red-950 border-red-500 text-red-300 shadow-sm'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    ? 'bg-rose-50 border-rose-200 text-rose-700 shadow-2xs'
+                    : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'
                 }`}
               >
                 403 DROP
@@ -699,8 +683,8 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
                 onClick={() => handleUpdateBotConfig({ actionStrategy: 'rate_limit_429' })}
                 className={`px-2 py-1.5 rounded-lg text-[11px] font-mono font-bold border text-center transition-all cursor-pointer ${
                   botConfig.actionStrategy === 'rate_limit_429'
-                    ? 'bg-amber-950 border-amber-500 text-amber-300 shadow-sm'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    ? 'bg-amber-50 border-amber-200 text-amber-800 shadow-2xs'
+                    : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'
                 }`}
               >
                 429 LIMIT
@@ -710,45 +694,43 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
                 onClick={() => handleUpdateBotConfig({ actionStrategy: 'challenge_js' })}
                 className={`px-2 py-1.5 rounded-lg text-[11px] font-mono font-bold border text-center transition-all cursor-pointer ${
                   botConfig.actionStrategy === 'challenge_js'
-                    ? 'bg-emerald-950 border-emerald-500 text-emerald-300 shadow-sm'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800 shadow-2xs'
+                    : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'
                 }`}
               >
                 JS PROOF
               </button>
             </div>
             <p className="text-[10px] text-slate-500 font-mono">
-              {botConfig.actionStrategy === 'block_403' && 'Immediately terminates connection with HTTP 403 Forbidden.'}
-              {botConfig.actionStrategy === 'rate_limit_429' && 'Applies sliding window 429 throttling cooldown.'}
-              {botConfig.actionStrategy === 'challenge_js' && 'Issues JavaScript proof-of-work challenge before forwarding.'}
+              {botConfig.actionStrategy === 'block_403' && 'Terminates connection with HTTP 403 Forbidden.'}
+              {botConfig.actionStrategy === 'rate_limit_429' && 'Applies sliding window 429 throttling.'}
+              {botConfig.actionStrategy === 'challenge_js' && 'Issues JS proof-of-work challenge.'}
             </p>
           </div>
         </div>
 
-        {/* Clear Technical Explanation of Bot Protection Engine */}
-        <div className="pt-3 border-t border-slate-800/80 font-mono text-xs text-slate-400 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="pt-3 border-t border-slate-200 font-mono text-xs text-slate-600 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Zap className="h-4 w-4 text-amber-400 shrink-0" />
+            <Zap className="h-4 w-4 text-amber-600 shrink-0" />
             <span>
-              <strong className="text-white font-sans">Active Scraper & Rate Limit Engine (BOT-8001 to BOT-8004):</strong> Inspects <code className="text-amber-300">User-Agent</code> signatures (<code className="text-amber-300">python-requests</code>, <code className="text-amber-300">curl</code>, <code className="text-amber-300">headlesschrome</code>, <code className="text-amber-300">sqlmap</code>) and enforces sliding window token bucket limits.
+              <strong className="text-slate-900 font-sans">Active Bot Engine (BOT-8001):</strong> Inspects User-Agent signatures and enforces sliding window token bucket limits.
             </span>
           </div>
-          <span className="text-[11px] bg-slate-950 px-2.5 py-1 rounded border border-slate-800 text-red-300 font-bold shrink-0">
+          <span className="text-[11px] bg-slate-50 px-2.5 py-1 rounded border border-slate-200 text-indigo-700 font-bold shrink-0">
             {botConfig.rateLimitRpm} RPM Max Threshold
           </span>
         </div>
       </div>
 
-      {/* Main Grid: Detailed OWASP Rules List (Left 2 Cols) & Banned IPs Panel (Right 1 Col) */}
+      {/* Main Grid: OWASP Rules List & Banned IPs Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Detailed Rules List */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-            <h2 className="text-sm font-bold font-mono uppercase tracking-wider text-white flex items-center gap-2">
-              <Shield className="h-4 w-4 text-red-400 shrink-0" />
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+            <h2 className="text-sm font-bold font-mono uppercase tracking-wider text-slate-900 flex items-center gap-2">
+              <Shield className="h-4 w-4 text-indigo-600 shrink-0" />
               <span>OWASP & Custom Security Rules ({rules.length} Modules)</span>
             </h2>
-            <span className="text-xs font-mono text-slate-400">
+            <span className="text-xs font-mono text-slate-500">
               {rules.filter((r) => r.enabled).length} Active Enforcers
             </span>
           </div>
@@ -760,50 +742,48 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
               return (
                 <div
                   key={rule.id}
-                  className={`rounded-xl border transition-all overflow-hidden ${
+                  className={`rounded-xl border transition-all overflow-hidden shadow-xs ${
                     rule.enabled
-                      ? 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
-                      : 'bg-slate-950/40 border-slate-900 opacity-60'
+                      ? 'bg-white border-slate-200 hover:border-slate-300'
+                      : 'bg-slate-50 border-slate-200 opacity-60'
                   }`}
                 >
-                  {/* Card Main Header */}
                   <div className="p-4 flex items-start justify-between gap-4">
                     <div className="flex-1 cursor-pointer" onClick={() => toggleExpand(rule.id)}>
                       <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                        <span className="text-sm font-bold text-white font-mono">
+                        <span className="text-sm font-bold text-slate-900 font-mono">
                           {rule.name}
                         </span>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-950 border border-slate-800 text-slate-300">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 border border-slate-200 text-slate-700">
                           {rule.owaspId}
                         </span>
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
                             rule.severity === 'CRITICAL'
-                              ? 'bg-red-950/80 border-red-800 text-red-300'
+                              ? 'bg-rose-50 border-rose-200 text-rose-700'
                               : rule.severity === 'HIGH'
-                              ? 'bg-amber-950/80 border-amber-800 text-amber-300'
-                              : 'bg-slate-950 border-slate-800 text-slate-300'
+                              ? 'bg-amber-50 border-amber-200 text-amber-800'
+                              : 'bg-slate-100 border-slate-200 text-slate-700'
                           }`}
                         >
                           {rule.severity}
                         </span>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-950/60 border border-red-900/60 text-red-300">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-50 border border-rose-200 text-rose-700">
                           +{rule.anomalyPoints} Anomaly Pts
                         </span>
                       </div>
 
-                      <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                      <p className="text-xs text-slate-600 leading-relaxed font-sans">
                         {rule.description}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-3 shrink-0">
-                      {/* Toggle Switch */}
                       <button
                         type="button"
                         onClick={() => handleToggleRule(rule.id)}
                         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                          rule.enabled ? 'bg-red-600' : 'bg-slate-800'
+                          rule.enabled ? 'bg-indigo-600' : 'bg-slate-300'
                         }`}
                         title={rule.enabled ? 'Disable Rule' : 'Enable Rule'}
                       >
@@ -814,71 +794,64 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
                         />
                       </button>
 
-                      {/* Expand Details Trigger */}
                       <button
                         type="button"
                         onClick={() => toggleExpand(rule.id)}
-                        className="p-1 rounded bg-slate-950 border border-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
-                        title={isExpanded ? 'Collapse details' : 'View detailed spec & regex'}
+                        className="p-1 rounded bg-slate-50 border border-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer shadow-2xs"
                       >
                         {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
 
-                  {/* Expandable Technical Specification Drawer */}
                   {isExpanded && (
-                    <div className="px-4 pb-4 pt-3 border-t border-slate-800/80 bg-slate-950/60 space-y-3 text-xs font-mono">
-                      {/* Classification & Mappings */}
+                    <div className="px-4 pb-4 pt-3 border-t border-slate-200 bg-slate-50/70 space-y-3 text-xs font-mono">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
                         <div>
-                          <span className="text-slate-500 block mb-0.5">Common Weakness Enumeration (CWE)</span>
-                          <span className="text-slate-200 font-semibold">{rule.cwe}</span>
+                          <span className="text-slate-500 block mb-0.5">CWE Specification</span>
+                          <span className="text-slate-800 font-semibold">{rule.cwe}</span>
                         </div>
                         <div>
                           <span className="text-slate-500 block mb-0.5">OWASP Top 10 Category</span>
-                          <span className="text-slate-200 font-semibold">{rule.owaspTop10}</span>
+                          <span className="text-slate-800 font-semibold">{rule.owaspTop10}</span>
                         </div>
                       </div>
 
-                      {/* Target Request Fields */}
                       <div>
                         <span className="text-slate-500 block mb-1 text-[11px]">Inspected Request Parameters & Targets</span>
                         <div className="flex flex-wrap gap-1.5">
                           {rule.targetFields.map((field) => (
-                            <span key={field} className="px-2 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-800 text-red-300 font-bold">
+                            <span key={field} className="px-2 py-0.5 rounded text-[10px] bg-white border border-slate-200 text-indigo-700 font-bold shadow-2xs">
                               {field}
                             </span>
                           ))}
                         </div>
                       </div>
 
-                      {/* Regular Expression Detection Signature */}
                       <div>
                         <span className="text-slate-500 block mb-1 text-[11px] flex items-center gap-1">
-                          <Code2 className="h-3 w-3 text-amber-400 shrink-0" />
+                          <Code2 className="h-3 w-3 text-indigo-600 shrink-0" />
                           <span>Detection Regex Signature Pattern</span>
                         </span>
-                        <pre className="p-2.5 rounded-lg bg-black border border-slate-800 text-amber-300/90 text-[11px] overflow-x-auto whitespace-pre-wrap break-all select-all font-mono">
+                        <pre className="p-2.5 rounded-lg bg-slate-900 text-amber-300 text-[11px] overflow-x-auto whitespace-pre-wrap break-all select-all font-mono">
                           {rule.regexPattern}
                         </pre>
                       </div>
 
-                      {/* Sample Attack Payload & Action */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1 border-t border-slate-800/60">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1 border-t border-slate-200">
                         <div>
                           <span className="text-slate-500 block mb-0.5 flex items-center gap-1">
-                            <Terminal className="h-3 w-3 text-red-400 shrink-0" />
+                            <Terminal className="h-3 w-3 text-rose-600 shrink-0" />
                             <span>Example Attack Vector</span>
                           </span>
-                          <code className="text-red-300 font-bold break-all">{rule.exampleAttackPayload}</code>
+                          <code className="text-rose-700 font-bold break-all">{rule.exampleAttackPayload}</code>
                         </div>
                         <div>
                           <span className="text-slate-500 block mb-0.5 flex items-center gap-1">
-                            <ShieldAlert className="h-3 w-3 text-emerald-400 shrink-0" />
-                            <span>Enforcement Response Action</span>
+                            <ShieldAlert className="h-3 w-3 text-emerald-600 shrink-0" />
+                            <span>Remediation Action</span>
                           </span>
-                          <span className="text-emerald-400 font-bold">{rule.remediationAction}</span>
+                          <span className="text-emerald-800 font-bold">{rule.remediationAction}</span>
                         </div>
                       </div>
                     </div>
@@ -891,16 +864,15 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
 
         {/* Right Column: Banned IPs & Manual Ban Panel */}
         <div className="space-y-6">
-          {/* Add Manual IP Ban Card */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-5 shadow-lg">
-            <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-white mb-3 flex items-center gap-2">
-              <Plus className="h-4 w-4 text-red-400 shrink-0" />
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+            <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-2">
+              <Plus className="h-4 w-4 text-indigo-600 shrink-0" />
               <span>Add Manual IP Perimeter Ban</span>
             </h3>
 
             <form onSubmit={handleAddManualBan} className="space-y-3">
               <div>
-                <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                <label className="block text-[11px] font-mono text-slate-600 mb-1">
                   Target IP Address
                 </label>
                 <input
@@ -909,12 +881,12 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
                   value={newManualIp}
                   onChange={(e) => setNewManualIp(e.target.value)}
                   placeholder="198.51.100.42"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-red-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                <label className="block text-[11px] font-mono text-slate-600 mb-1">
                   Enforcement Reason
                 </label>
                 <input
@@ -922,13 +894,13 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
                   value={ipReason}
                   onChange={(e) => setIpReason(e.target.value)}
                   placeholder="Manual SecOps Operator Ban"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-red-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white font-mono font-bold text-xs shadow-md transition-all cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs shadow-xs transition-all cursor-pointer"
               >
                 <Lock className="h-3.5 w-3.5" />
                 <span>Enforce Immediate IP Ban</span>
@@ -936,14 +908,13 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
             </form>
           </div>
 
-          {/* Active Banned IPs Feed */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-5 shadow-lg space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-white flex items-center gap-2">
-                <Globe className="h-4 w-4 text-red-400 shrink-0" />
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+              <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                <Globe className="h-4 w-4 text-indigo-600 shrink-0" />
                 <span>Active Banned IPs ({bannedIps.length})</span>
               </h3>
-              <span className="text-[10px] font-mono text-slate-400">Synced to Firestore</span>
+              <span className="text-[10px] font-mono text-slate-500">Synced to Firestore</span>
             </div>
 
             <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
@@ -955,28 +926,20 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
                 bannedIps.map((item) => (
                   <div
                     key={item.ip}
-                    className="p-3 rounded-lg border border-red-950/60 bg-red-950/20 flex items-center justify-between gap-3 text-xs font-mono"
+                    className="p-3 rounded-lg border border-rose-200 bg-rose-50/50 flex items-center justify-between gap-2 text-xs font-mono"
                   >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-red-300">{item.ip}</span>
-                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-red-950 border border-red-800 text-red-400 tabular-nums">
-                          {item.strikes} Strikes
-                        </span>
+                    <div>
+                      <div className="font-bold text-rose-900">{item.ip}</div>
+                      <div className="text-[10px] text-slate-600 truncate max-w-[180px]">
+                        {item.reason} · {item.strikes} strikes
                       </div>
-                      <span className="text-[11px] text-slate-400 truncate block mt-0.5">
-                        {item.reason}
-                      </span>
                     </div>
-
                     <button
                       type="button"
                       onClick={() => handleReleaseBan(item.ip)}
-                      className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 shrink-0"
-                      title="Release IP Ban"
+                      className="px-2 py-1 rounded bg-white border border-rose-300 text-rose-700 hover:bg-rose-100 text-[10px] font-bold cursor-pointer shadow-2xs"
                     >
-                      <Unlock className="h-3 w-3 text-emerald-400" />
-                      <span>Unban</span>
+                      Release
                     </button>
                   </div>
                 ))
@@ -986,120 +949,127 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
         </div>
       </div>
 
-      {/* CREATE CUSTOM RULE MODAL */}
+      {/* Custom Rule Creation Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <Plus className="h-5 w-5 text-red-400" />
-                <h2 className="text-base font-bold text-white uppercase font-sans">
-                  Create Custom Security Rule
-                </h2>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Shield className="h-5 w-5 text-indigo-600" />
+                <span>Create Custom WAF Security Rule</span>
+              </h3>
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="p-1 rounded text-slate-400 hover:text-white"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateCustomRule} className="space-y-4 font-mono text-xs">
-              <div>
-                <label className="block text-slate-400 mb-1">Rule Name</label>
-                <input
-                  type="text"
-                  required
-                  value={customName}
-                  onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="e.g., Custom Admin Endpoint Guard"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white placeholder-slate-600 focus:outline-none focus:border-red-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={handleCreateCustomRule} className="space-y-4 text-xs font-mono">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-sans">
                 <div>
-                  <label className="block text-slate-400 mb-1">Category</label>
+                  <label className="block text-slate-700 font-medium mb-1">Rule Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    placeholder="Custom Header Injection Guard"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-xs focus:outline-none focus:border-indigo-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-medium mb-1">Category</label>
                   <input
                     type="text"
                     value={customCategory}
                     onChange={(e) => setCustomCategory(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-red-500"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-xs focus:outline-none focus:border-indigo-600"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-slate-700 font-medium mb-1">OWASP ID</label>
+                  <input
+                    type="text"
+                    value={customOwaspId}
+                    onChange={(e) => setCustomOwaspId(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-xs"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Severity</label>
+                  <label className="block text-slate-700 font-medium mb-1">Severity</label>
                   <select
                     value={customSeverity}
-                    onChange={(e) => setCustomSeverity(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-red-500"
+                    onChange={(e: any) => setCustomSeverity(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-xs cursor-pointer"
                   >
-                    <option value="CRITICAL">CRITICAL (5 Pts)</option>
-                    <option value="HIGH">HIGH (4 Pts)</option>
-                    <option value="MEDIUM">MEDIUM (2 Pts)</option>
+                    <option value="CRITICAL">CRITICAL</option>
+                    <option value="HIGH">HIGH</option>
+                    <option value="MEDIUM">MEDIUM</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-medium mb-1">Anomaly Pts</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={customAnomalyPts}
+                    onChange={(e) => setCustomAnomalyPts(parseInt(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-xs"
+                  />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Target Request Parameters</label>
-                <input
-                  type="text"
-                  value={customFields}
-                  onChange={(e) => setCustomFields(e.target.value)}
-                  placeholder="ARGS_GET, ARGS_POST, REQUEST_HEADERS"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-red-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-400 mb-1">Detection Regex Pattern</label>
+                <label className="block text-slate-700 font-medium mb-1">Detection Regex Pattern</label>
                 <input
                   type="text"
                   required
                   value={customRegex}
                   onChange={(e) => setCustomRegex(e.target.value)}
-                  placeholder="(?i)(\badmin_bypass\b)"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-amber-300 font-mono focus:outline-none focus:border-red-500"
+                  className="w-full px-3 py-2 bg-slate-900 text-amber-300 border border-slate-200 rounded-lg text-xs font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Example Attack Payload</label>
+                <label className="block text-slate-700 font-medium mb-1">Example Attack Payload</label>
                 <input
                   type="text"
                   value={customPayload}
                   onChange={(e) => setCustomPayload(e.target.value)}
-                  placeholder="GET /api/v1/resource?action=admin_bypass"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-red-300 font-mono focus:outline-none focus:border-red-500"
+                  className="w-full px-3 py-2 bg-slate-50 text-rose-700 border border-slate-200 rounded-lg text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Description</label>
-                <textarea
+                <label className="block text-slate-700 font-medium mb-1">Description</label>
+                <input
+                  type="text"
                   value={customDesc}
                   onChange={(e) => setCustomDesc(e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-red-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-xs"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 font-sans">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-white"
+                  className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold text-xs cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold shadow-md"
+                  className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs cursor-pointer"
                 >
-                  Publish Custom Rule
+                  Deploy Custom Rule
                 </button>
               </div>
             </form>

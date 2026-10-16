@@ -16,10 +16,10 @@ export const ApiGatekeeperLogo: React.FC<ApiGatekeeperLogoProps> = ({
     <div className="inline-flex items-center gap-3.5 group cursor-pointer select-none">
       {/* Emblem Container */}
       <div
-        className={`relative flex items-center justify-center shrink-0 rounded-xl bg-slate-950 border border-red-900/60 shadow-md transition-all duration-300 group-hover:border-red-500/80 ${className}`}
+        className={`relative flex items-center justify-center shrink-0 rounded-xl bg-slate-900 border border-slate-200 shadow-sm transition-all duration-300 group-hover:border-indigo-500/80 ${className}`}
         style={{ width: size, height: size }}
       >
-        {/* Vector SVG Emblem Matching Uploaded Brand Asset Exactly */}
+        {/* Vector SVG Emblem Matching Enterprise Theme */}
         <svg
           viewBox="0 0 100 100"
           fill="none"
@@ -27,32 +27,32 @@ export const ApiGatekeeperLogo: React.FC<ApiGatekeeperLogoProps> = ({
           className="w-full h-full p-1"
         >
           <defs>
-            {/* Outer Armor Rim Red Gradient */}
+            {/* Outer Armor Rim Blue Gradient */}
             <linearGradient id="shieldRim" x1="10" y1="5" x2="90" y2="95" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#f87171" />
-              <stop offset="35%" stopColor="#ef4444" />
-              <stop offset="70%" stopColor="#dc2626" />
-              <stop offset="100%" stopColor="#991b1b" />
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="35%" stopColor="#3b82f6" />
+              <stop offset="70%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1e40af" />
             </linearGradient>
 
-            {/* Pillar Red Metallic Gradient */}
+            {/* Pillar Enterprise Metallic Gradient */}
             <linearGradient id="pillarGrad" x1="50" y1="20" x2="50" y2="80" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="30%" stopColor="#ef4444" />
-              <stop offset="80%" stopColor="#b91c1c" />
-              <stop offset="100%" stopColor="#7f1d1d" />
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="30%" stopColor="#3b82f6" />
+              <stop offset="80%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e3a8a" />
             </linearGradient>
 
             {/* Inner Left Dark Obsidian */}
             <linearGradient id="obsidianLeft" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#1e2330" />
-              <stop offset="100%" stopColor="#0b0e14" />
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
 
             {/* Inner Right Pitch Black */}
             <linearGradient id="obsidianRight" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#0f131a" />
-              <stop offset="100%" stopColor="#040608" />
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
             </linearGradient>
           </defs>
 
@@ -65,7 +65,7 @@ export const ApiGatekeeperLogo: React.FC<ApiGatekeeperLogoProps> = ({
           {/* Inner Inset Rim Border */}
           <path
             d="M50 8L84 20.5V52C84 70 68 85 50 90.5C32 85 16 70 16 52V20.5L50 8Z"
-            fill="#080a0f"
+            fill="#090d16"
           />
 
           {/* Split Obsidian Shield Face - Left Side */}
@@ -83,19 +83,19 @@ export const ApiGatekeeperLogo: React.FC<ApiGatekeeperLogoProps> = ({
           {/* Circuit Trace Branch Lines (Left Side) */}
           <path
             d="M37 38H27L22 38"
-            stroke="#ef4444"
+            stroke="#3b82f6"
             strokeWidth="2.5"
             strokeLinecap="round"
           />
           <path
             d="M37 50H26L20 50"
-            stroke="#ef4444"
+            stroke="#3b82f6"
             strokeWidth="2.5"
             strokeLinecap="round"
           />
           <path
             d="M37 62H27L22 62"
-            stroke="#ef4444"
+            stroke="#3b82f6"
             strokeWidth="2.5"
             strokeLinecap="round"
           />
@@ -103,41 +103,41 @@ export const ApiGatekeeperLogo: React.FC<ApiGatekeeperLogoProps> = ({
           {/* Circuit Trace Branch Lines (Right Side) */}
           <path
             d="M63 38H73L78 38"
-            stroke="#ef4444"
+            stroke="#3b82f6"
             strokeWidth="2.5"
             strokeLinecap="round"
           />
           <path
             d="M63 50H74L80 50"
-            stroke="#ef4444"
+            stroke="#3b82f6"
             strokeWidth="2.5"
             strokeLinecap="round"
           />
           <path
             d="M63 62H73L78 62"
-            stroke="#ef4444"
+            stroke="#3b82f6"
             strokeWidth="2.5"
             strokeLinecap="round"
           />
 
           {/* 3 Left Circular Circuit Nodes */}
-          <circle cx="22" cy="38" r="4.5" fill="#ef4444" stroke="#fca5a5" strokeWidth="1.5" />
+          <circle cx="22" cy="38" r="4.5" fill="#3b82f6" stroke="#93c5fd" strokeWidth="1.5" />
           <circle cx="22" cy="38" r="2" fill="#ffffff" />
 
-          <circle cx="20" cy="50" r="4.5" fill="#ef4444" stroke="#fca5a5" strokeWidth="1.5" />
+          <circle cx="20" cy="50" r="4.5" fill="#3b82f6" stroke="#93c5fd" strokeWidth="1.5" />
           <circle cx="20" cy="50" r="2" fill="#ffffff" />
 
-          <circle cx="22" cy="62" r="4.5" fill="#ef4444" stroke="#fca5a5" strokeWidth="1.5" />
+          <circle cx="22" cy="62" r="4.5" fill="#3b82f6" stroke="#93c5fd" strokeWidth="1.5" />
           <circle cx="22" cy="62" r="2" fill="#ffffff" />
 
           {/* 3 Right Circular Circuit Nodes */}
-          <circle cx="78" cy="38" r="4.5" fill="#ef4444" stroke="#fca5a5" strokeWidth="1.5" />
+          <circle cx="78" cy="38" r="4.5" fill="#3b82f6" stroke="#93c5fd" strokeWidth="1.5" />
           <circle cx="78" cy="38" r="2" fill="#ffffff" />
 
-          <circle cx="80" cy="50" r="4.5" fill="#ef4444" stroke="#fca5a5" strokeWidth="1.5" />
+          <circle cx="80" cy="50" r="4.5" fill="#3b82f6" stroke="#93c5fd" strokeWidth="1.5" />
           <circle cx="80" cy="50" r="2" fill="#ffffff" />
 
-          <circle cx="78" cy="62" r="4.5" fill="#ef4444" stroke="#fca5a5" strokeWidth="1.5" />
+          <circle cx="78" cy="62" r="4.5" fill="#3b82f6" stroke="#93c5fd" strokeWidth="1.5" />
           <circle cx="78" cy="62" r="2" fill="#ffffff" />
 
           {/* Center 3 Vertical Angled Pillars */}
@@ -145,7 +145,7 @@ export const ApiGatekeeperLogo: React.FC<ApiGatekeeperLogoProps> = ({
           <path
             d="M37 34L43 30V68L37 64Z"
             fill="url(#pillarGrad)"
-            stroke="#f87171"
+            stroke="#60a5fa"
             strokeWidth="0.8"
           />
 
@@ -153,7 +153,7 @@ export const ApiGatekeeperLogo: React.FC<ApiGatekeeperLogoProps> = ({
           <path
             d="M47 28L50 23L53 28V72L50 75L47 72Z"
             fill="url(#pillarGrad)"
-            stroke="#fca5a5"
+            stroke="#93c5fd"
             strokeWidth="1"
           />
 
@@ -161,7 +161,7 @@ export const ApiGatekeeperLogo: React.FC<ApiGatekeeperLogoProps> = ({
           <path
             d="M57 30L63 34V64L57 68Z"
             fill="url(#pillarGrad)"
-            stroke="#f87171"
+            stroke="#60a5fa"
             strokeWidth="0.8"
           />
         </svg>
@@ -170,8 +170,8 @@ export const ApiGatekeeperLogo: React.FC<ApiGatekeeperLogoProps> = ({
       {/* Integrated Typography */}
       {showText && (
         <div className="flex flex-col text-left">
-          <span className="text-base sm:text-lg font-black tracking-widest text-white uppercase font-mono leading-none">
-            API GATEKEEPER
+          <span className="text-base sm:text-lg font-bold tracking-tight text-slate-900 uppercase font-sans">
+            API Gatekeeper
           </span>
         </div>
       )}

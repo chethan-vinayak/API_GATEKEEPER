@@ -212,7 +212,7 @@ export default function App() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col selection:bg-red-500/30 selection:text-red-200">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-indigo-500/20 selection:text-indigo-900">
       {/* Top Bar Navigation */}
       <Header
         activeTab={activeTab}
@@ -238,24 +238,24 @@ export default function App() {
 
             {/* Threat Vector Distribution Bar (populated when events exist) */}
             {events.length > 0 && Object.keys(categoryStats).length > 0 && (
-              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+              <div className="rounded-xl border border-slate-200 bg-white shadow-xs p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                    <ShieldAlert className="h-3.5 w-3.5 text-red-400" />
+                  <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <ShieldAlert className="h-3.5 w-3.5 text-rose-600" />
                     <span>Intercepted Threat Vector Breakdown ({events.length} Probes)</span>
                   </span>
-                  <span className="text-[11px] text-slate-400 font-mono">
+                  <span className="text-[11px] text-slate-500 font-mono">
                     {stats.blocked_count} Blocked · {stats.allowed_count} Allowed
                   </span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
                   {Object.entries(categoryStats).map(([cat, count]) => (
-                    <div key={cat} className="rounded-lg bg-slate-950 p-2.5 border border-slate-800/80">
-                      <span className="text-[10px] font-mono uppercase text-slate-400 block truncate">
+                    <div key={cat} className="rounded-lg bg-slate-50 p-2.5 border border-slate-200">
+                      <span className="text-[10px] font-mono uppercase text-slate-500 block truncate">
                         {cat}
                       </span>
                       <div className="flex items-baseline justify-between mt-1">
-                        <span className="text-sm font-bold font-mono text-white">
+                        <span className="text-sm font-bold font-mono text-slate-900">
                           {count}
                         </span>
                         <span className="text-[10px] text-slate-500 font-mono">
@@ -376,12 +376,12 @@ export default function App() {
       )}
 
       {/* Professional Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950/80 py-5 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-200 bg-white py-5 text-center text-xs text-slate-500 mt-auto">
         <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="font-mono uppercase font-bold text-slate-400">
+          <span className="font-mono uppercase font-bold text-slate-700">
             API GATEKEEPER · Autonomous Reverse-Proxy & WAF Security Command Center
           </span>
-          <div className="flex items-center gap-4 text-slate-400">
+          <div className="flex items-center gap-4 text-slate-500 font-medium">
             <span>OWASP CRS Anomaly Scoring</span>
             <span aria-hidden="true">·</span>
             <span>OpenAPI Contract Guard</span>

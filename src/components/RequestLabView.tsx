@@ -13,8 +13,7 @@ import {
   Check,
   Sparkles,
   Zap,
-  Globe,
-  Sliders
+  Globe
 } from 'lucide-react';
 import type { SecurityEvent } from '../gateway/types.ts';
 
@@ -43,7 +42,7 @@ const PRESET_ARSENAL: PresetPayload[] = [
     tag: 'OWASP A05 / CWE-89',
     method: 'GET',
     path: '/api/products',
-    clientIp: '185.220.101.5', // Russia
+    clientIp: '185.220.101.5',
     query: "search=phone' OR 1=1--",
     body: '',
     description: 'Attempts to force SQL query to evaluate to true and dump entire user/product tables.',
@@ -55,7 +54,7 @@ const PRESET_ARSENAL: PresetPayload[] = [
     tag: 'OWASP LLM01:2025',
     method: 'POST',
     path: '/v1/chat/completions',
-    clientIp: '192.0.2.88', // Netherlands
+    clientIp: '192.0.2.88',
     query: '',
     body: JSON.stringify({
       model: 'gpt-4o',
@@ -75,7 +74,7 @@ const PRESET_ARSENAL: PresetPayload[] = [
     tag: 'Evasion Bypass',
     method: 'GET',
     path: '/api/products',
-    clientIp: '13.212.14.92', // Singapore
+    clientIp: '13.212.14.92',
     query: 'search=%2527%2520UNION/**/SELECT%25201,2--',
     body: '',
     description: 'Uses %2527 (double encoding) and SQL inline comments to bypass simple regex WAFs.',
@@ -87,7 +86,7 @@ const PRESET_ARSENAL: PresetPayload[] = [
     tag: 'CWE-943',
     method: 'POST',
     path: '/api/login',
-    clientIp: '103.251.167.9', // China
+    clientIp: '103.251.167.9',
     query: '',
     body: JSON.stringify({
       username: { "$ne": null },
@@ -102,7 +101,7 @@ const PRESET_ARSENAL: PresetPayload[] = [
     tag: 'CWE-78',
     method: 'GET',
     path: '/api/products',
-    clientIp: '177.124.88.19', // Brazil
+    clientIp: '177.124.88.19',
     query: 'search=laptop;cat /etc/passwd',
     body: '',
     description: 'Subshell command chaining attempting local credential harvesting.',
@@ -114,7 +113,7 @@ const PRESET_ARSENAL: PresetPayload[] = [
     tag: 'CWE-22',
     method: 'GET',
     path: '/api/products',
-    clientIp: '103.45.12.77', // India
+    clientIp: '103.45.12.77',
     query: 'search=../../../../etc/passwd',
     body: '',
     description: 'Path escape probe targeting sensitive host system files and shadow credentials.',
@@ -126,7 +125,7 @@ const PRESET_ARSENAL: PresetPayload[] = [
     tag: 'Positive Contract',
     method: 'POST',
     path: '/api/register',
-    clientIp: '198.51.100.105', // US
+    clientIp: '198.51.100.105',
     query: '',
     body: JSON.stringify({
       username: 'attacker',
@@ -351,7 +350,7 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
 
   const handleVoiceExplain = () => {
     if (!result) return;
-    const { decision, findings, decodeChain, event } = result;
+    const { decision, findings, decodeChain } = result;
 
     if (decision.action === 'blocked') {
       const primary = findings?.[0]?.name || decision.primaryCategory;
@@ -366,24 +365,24 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
   return (
     <div className="space-y-6">
       {/* Prominent Guidance Banner */}
-      <div className="rounded-xl border border-red-500/30 bg-red-950/20 p-5 backdrop-blur-md">
+      <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-5 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-400 mb-1">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-700 mb-1">
               <Sparkles className="h-4 w-4" />
               <span>Interactive User Input & Request Testing Lab</span>
             </div>
-            <h2 className="text-base sm:text-lg font-bold text-white">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
               Send Live HTTP Requests & Observe Gatekeeper Interception
             </h2>
-            <p className="text-xs text-slate-300 mt-1 leading-relaxed max-w-3xl">
-              This is where you directly input test traffic. Choose a pre-loaded exploit preset (SQLi, LLM Prompt Injection, XSS) or write your own custom HTTP payload. Click <strong className="text-red-300">"Send Through Gatekeeper"</strong> to observe sub-5ms inspection, anomaly scoring, and voice debriefs.
+            <p className="text-xs text-slate-600 mt-1 leading-relaxed max-w-3xl">
+              This is where you directly input test traffic. Choose a pre-loaded exploit preset (SQLi, LLM Prompt Injection, XSS) or write your own custom HTTP payload. Click <strong className="text-indigo-700">"Send Through Gatekeeper"</strong> to observe sub-5ms inspection, anomaly scoring, and voice debriefs.
             </p>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono bg-slate-900 border border-slate-700 text-emerald-400">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono bg-white border border-indigo-200 text-emerald-700 font-semibold shadow-2xs">
+              <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
               INSPECTION ENGINE ACTIVE
             </span>
           </div>
@@ -393,11 +392,11 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
       {/* 1-Click Exploit Arsenal Presets */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-            <Zap className="h-3.5 w-3.5 text-amber-400" />
+          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+            <Zap className="h-3.5 w-3.5 text-amber-600" />
             1-Click Test Scenarios (Click to Load)
           </h3>
-          <span className="text-[11px] text-slate-400">
+          <span className="text-[11px] text-slate-500">
             Click any scenario to populate the input form below
           </span>
         </div>
@@ -410,28 +409,28 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
                 key={p.name}
                 type="button"
                 onClick={() => handleApplyPreset(p)}
-                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                className={`p-3 rounded-xl border text-left transition-all cursor-pointer shadow-2xs ${
                   isCurrent
-                    ? 'border-red-500 bg-red-950/40 shadow-sm'
-                    : 'border-slate-800 bg-slate-900/70 hover:border-slate-700 hover:bg-slate-900'
+                    ? 'border-indigo-600 bg-indigo-50/70 shadow-xs'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
                     p.expected === 'blocked'
-                      ? 'bg-red-950 border border-red-800 text-red-300'
-                      : 'bg-emerald-950 border border-emerald-800 text-emerald-300'
+                      ? 'bg-rose-50 border border-rose-200 text-rose-700'
+                      : 'bg-emerald-50 border border-emerald-200 text-emerald-800'
                   }`}>
                     {p.method}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-mono truncate">
+                  <span className="text-[10px] text-slate-500 font-mono truncate">
                     {p.tag}
                   </span>
                 </div>
-                <div className="text-xs font-bold text-white truncate">
+                <div className="text-xs font-bold text-slate-900 truncate">
                   {p.name}
                 </div>
-                <p className="text-[11px] text-slate-400 truncate mt-1">
+                <p className="text-[11px] text-slate-500 truncate mt-1">
                   {p.description}
                 </p>
               </button>
@@ -440,21 +439,21 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
         </div>
       </div>
 
-      {/* Main Dual-Column Section: Request Builder + Live Verdict */}
+      {/* Main Dual-Column Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Interactive User Input Form */}
-        <div className="lg:col-span-7 rounded-xl border border-slate-800 bg-slate-900/80 p-5 backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
-            <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
-              <Code2 className="h-4 w-4 text-red-400" />
+        <div className="lg:col-span-7 rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-900 uppercase tracking-wider">
+              <Code2 className="h-4 w-4 text-indigo-600" />
               <span>HTTP Request Builder (User Input)</span>
             </div>
             <button
               type="button"
               onClick={handleCopyCurl}
-              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
             >
-              {copiedCurl ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+              {copiedCurl ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
               <span>{copiedCurl ? 'cURL Copied!' : 'Copy cURL'}</span>
             </button>
           </div>
@@ -463,13 +462,13 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
             {/* Method + Path Row */}
             <div className="grid grid-cols-12 gap-2">
               <div className="col-span-4 sm:col-span-3">
-                <label className="block text-xs font-medium text-slate-400 mb-1">
+                <label className="block text-xs font-medium text-slate-700 mb-1">
                   Method
                 </label>
                 <select
                   value={method}
                   onChange={(e) => setMethod(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono font-bold text-slate-100 focus:outline-none focus:border-red-500 cursor-pointer"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-indigo-600 cursor-pointer"
                 >
                   <option value="GET">GET</option>
                   <option value="POST">POST</option>
@@ -480,7 +479,7 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
               </div>
 
               <div className="col-span-8 sm:col-span-9">
-                <label className="block text-xs font-medium text-slate-400 mb-1">
+                <label className="block text-xs font-medium text-slate-700 mb-1">
                   API Endpoint / Path
                 </label>
                 <input
@@ -488,20 +487,20 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
                   value={path}
                   onChange={(e) => setPath(e.target.value)}
                   placeholder="/api/products"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-600 focus:outline-none focus:border-red-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600"
                 />
               </div>
             </div>
 
-            {/* Client IP Spoof (for Geolocation testing) */}
+            {/* Client IP Spoof */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center justify-between">
+                <label className="block text-xs font-medium text-slate-700 mb-1 flex items-center justify-between">
                   <span>Client IP Address (Origin Geo)</span>
-                  <span className="text-[10px] text-slate-500 font-mono">Simulates Geo ASN</span>
+                  <span className="text-[10px] text-slate-400 font-mono">Simulates Geo ASN</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-500">
+                  <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
                     <Globe className="h-3.5 w-3.5" />
                   </div>
                   <input
@@ -509,13 +508,13 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
                     value={clientIp}
                     onChange={(e) => setClientIp(e.target.value)}
                     placeholder="185.220.101.5"
-                    className="w-full pl-8 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-100 placeholder-slate-600 focus:outline-none focus:border-red-500"
+                    className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">
+                <label className="block text-xs font-medium text-slate-700 mb-1">
                   URL Query Parameters
                 </label>
                 <input
@@ -523,23 +522,23 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="search=phone&category=tech"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-100 placeholder-slate-600 focus:outline-none focus:border-red-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600"
                 />
               </div>
             </div>
 
             {/* Request Body JSON editor */}
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center justify-between">
+              <label className="block text-xs font-medium text-slate-700 mb-1 flex items-center justify-between">
                 <span>Request Body (JSON Payload)</span>
-                <span className="text-[10px] text-slate-500 font-mono">Used for POST/PUT</span>
+                <span className="text-[10px] text-slate-400 font-mono">Used for POST/PUT</span>
               </label>
               <textarea
                 rows={5}
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder='{\n  "key": "value"\n}'
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs font-mono text-slate-100 placeholder-slate-700 focus:outline-none focus:border-red-500 leading-relaxed resize-y"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 leading-relaxed resize-y"
               />
             </div>
 
@@ -548,7 +547,7 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 rounded-lg bg-red-600 hover:bg-red-500 active:bg-red-700 py-2.5 text-xs font-bold text-white shadow-md shadow-red-950/50 transition-colors cursor-pointer disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 py-2.5 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer disabled:opacity-50"
               >
                 {isLoading ? (
                   <>
@@ -566,19 +565,19 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
           </form>
         </div>
 
-        {/* Right Column: Live Gatekeeper Verdict & Anomaly Breakdown */}
-        <div className="lg:col-span-5 rounded-xl border border-slate-800 bg-slate-900/80 p-5 backdrop-blur-sm flex flex-col justify-between">
+        {/* Right Column: Live Gatekeeper Verdict */}
+        <div className="lg:col-span-5 rounded-xl border border-slate-200 bg-white p-5 shadow-xs flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
-                <ShieldAlert className="h-4 w-4 text-red-400" />
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-900 uppercase tracking-wider">
+                <ShieldAlert className="h-4 w-4 text-indigo-600" />
                 <span>Gateway Verdict Breakdown</span>
               </div>
               {result && (
                 <button
                   type="button"
                   onClick={handleVoiceExplain}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-red-600/20 border border-red-500/40 text-red-300 hover:bg-red-600/30 text-xs font-semibold cursor-pointer"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold cursor-pointer shadow-2xs"
                 >
                   <Volume2 className="h-3.5 w-3.5" />
                   <span>Hear Voice Debrief</span>
@@ -588,11 +587,11 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
 
             {result ? (
               <div className="space-y-4">
-                {/* Large Glowing Verdict Banner */}
-                <div className={`rounded-xl border p-4 ${
+                {/* Status Banner */}
+                <div className={`rounded-xl border p-4 shadow-2xs ${
                   result.decision.action === 'blocked'
-                    ? 'border-red-600/80 bg-red-950/40 text-red-200'
-                    : 'border-emerald-600/80 bg-emerald-950/40 text-emerald-200'
+                    ? 'border-rose-200 bg-rose-50/70 text-rose-900'
+                    : 'border-emerald-200 bg-emerald-50/70 text-emerald-900'
                 }`}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-mono font-bold tracking-wider">
@@ -606,12 +605,12 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
                   <div className="text-xl font-extrabold uppercase tracking-tight flex items-center gap-2">
                     {result.decision.action === 'blocked' ? (
                       <>
-                        <ShieldAlert className="h-6 w-6 text-red-400" />
+                        <ShieldAlert className="h-6 w-6 text-rose-600" />
                         <span>INTERCEPTED & BLOCKED</span>
                       </>
                     ) : (
                       <>
-                        <ShieldCheck className="h-6 w-6 text-emerald-400" />
+                        <ShieldCheck className="h-6 w-6 text-emerald-600" />
                         <span>CLEAN TRAFFIC ALLOWED</span>
                       </>
                     )}
@@ -619,11 +618,11 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
 
                   <div className="mt-2 text-xs font-mono">
                     {result.decision.action === 'blocked' ? (
-                      <span className="text-red-400 font-semibold flex items-center gap-1">
+                      <span className="text-rose-700 font-semibold flex items-center gap-1">
                         🛡️ ZERO BYTES REACHED BACKEND SERVER
                       </span>
                     ) : (
-                      <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                      <span className="text-emerald-700 font-semibold flex items-center gap-1">
                         ✓ Forwarded safely to protected microservice
                       </span>
                     )}
@@ -632,23 +631,23 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
 
                 {/* Metrics Grid */}
                 <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                  <div className="rounded-lg bg-slate-950 border border-slate-800 p-2.5">
-                    <div className="text-slate-400 text-[10px]">OWASP CRS Anomaly Score:</div>
+                  <div className="rounded-lg bg-slate-50 border border-slate-200 p-2.5">
+                    <div className="text-slate-500 text-[10px]">OWASP CRS Anomaly Score:</div>
                     <div className="flex items-baseline gap-1.5 mt-0.5">
                       <span className={`text-base font-bold ${
-                        result.decision.totalScore >= 5 ? 'text-red-400' : 'text-emerald-400'
+                        result.decision.totalScore >= 5 ? 'text-rose-700' : 'text-emerald-800'
                       }`}>
                         {result.decision.totalScore} pts
                       </span>
-                      <span className="text-[10px] text-slate-400">
+                      <span className="text-[10px] text-slate-500">
                         {result.decision.totalScore >= 5 ? '(Threshold: 5 · BLOCKED)' : '(Threshold: 5 · PASS)'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="rounded-lg bg-slate-950 border border-slate-800 p-2.5">
-                    <div className="text-slate-400 text-[10px]">Primary Category:</div>
-                    <div className="text-base font-bold text-white uppercase truncate">
+                  <div className="rounded-lg bg-slate-50 border border-slate-200 p-2.5">
+                    <div className="text-slate-500 text-[10px]">Primary Category:</div>
+                    <div className="text-base font-bold text-slate-900 uppercase truncate">
                       {result.decision.primaryCategory || 'benign'}
                     </div>
                   </div>
@@ -656,19 +655,19 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
 
                 {/* Decode Chain */}
                 {result.decodeChain && result.decodeChain.length > 0 && (
-                  <div className="rounded-lg bg-slate-950 border border-slate-800 p-3">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-1">
-                      <Layers className="h-3 w-3 text-red-400" />
+                  <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 flex items-center gap-1">
+                      <Layers className="h-3 w-3 text-indigo-600" />
                       <span>Multi-Decode Normalization Chain:</span>
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap text-xs font-mono">
                       {result.decodeChain.map((step: string, idx: number) => (
                         <React.Fragment key={idx}>
-                          <span className="bg-slate-900 border border-slate-700 px-2 py-0.5 rounded text-red-300">
+                          <span className="bg-white border border-slate-200 px-2 py-0.5 rounded text-indigo-700 shadow-2xs">
                             {step}
                           </span>
                           {idx < result.decodeChain.length - 1 && (
-                            <ArrowRight className="h-3 w-3 text-slate-500" />
+                            <ArrowRight className="h-3 w-3 text-slate-400" />
                           )}
                         </React.Fragment>
                       ))}
@@ -678,7 +677,7 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
 
                 {/* Findings List */}
                 <div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                     Triggered Signatures & Contract Violations ({result.findings?.length || 0}):
                   </div>
 
@@ -687,31 +686,31 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
                       {result.findings.map((f: any, idx: number) => (
                         <div
                           key={idx}
-                          className="rounded-lg border border-red-950 bg-red-950/20 p-2.5 text-xs font-mono"
+                          className="rounded-lg border border-rose-200 bg-rose-50/50 p-2.5 text-xs font-mono"
                         >
-                          <div className="flex items-center justify-between text-red-300 font-bold">
+                          <div className="flex items-center justify-between text-rose-900 font-bold">
                             <span>{f.name}</span>
-                            <span className="text-[10px] bg-red-900/60 px-1.5 py-0.5 rounded">
+                            <span className="text-[10px] bg-rose-100 px-1.5 py-0.5 rounded text-rose-800">
                               Score +{f.score}
                             </span>
                           </div>
-                          <div className="text-[11px] text-slate-400 mt-1">
+                          <div className="text-[11px] text-slate-600 mt-1">
                             {f.owasp} · {f.cwe} · Target: {f.target}
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-lg bg-slate-950 border border-slate-800 p-3 text-xs text-slate-400">
+                    <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600">
                       No malicious patterns detected. Positive contract check satisfied.
                     </div>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="h-64 flex flex-col items-center justify-center text-center p-6 text-slate-500">
-                <Terminal className="h-10 w-10 text-slate-700 mb-3" />
-                <p className="text-xs text-slate-400 max-w-xs">
+              <div className="h-64 flex flex-col items-center justify-center text-center p-6 text-slate-400">
+                <Terminal className="h-10 w-10 text-slate-300 mb-3" />
+                <p className="text-xs text-slate-500 max-w-xs">
                   Awaiting request transmission. Select an exploit from the arsenal or click "Send Through Gatekeeper".
                 </p>
               </div>
@@ -719,9 +718,9 @@ export const RequestLabView: React.FC<RequestLabViewProps> = ({ onVoiceDebrief, 
           </div>
 
           {/* Quick Terminal cURL snippet */}
-          <div className="mt-4 pt-3 border-t border-slate-800 text-[11px] font-mono text-slate-400 flex items-center justify-between">
+          <div className="mt-4 pt-3 border-t border-slate-200 text-[11px] font-mono text-slate-500 flex items-center justify-between">
             <span>Direct Test Endpoint:</span>
-            <code className="text-slate-300 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+            <code className="text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
               POST /_gk/api/test
             </code>
           </div>

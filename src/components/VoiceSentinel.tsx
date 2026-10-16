@@ -12,8 +12,7 @@ import {
   Download,
   AlertTriangle,
   Award,
-  Bot,
-  ChevronDown
+  Bot
 } from 'lucide-react';
 import type { SecurityEvent, ScorecardResult } from '../gateway/types.ts';
 import { cleanMarkdownForSpeech } from '../utils/ai-helpers.ts';
@@ -59,7 +58,6 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Initialize greeting script
   useEffect(() => {
     if (selectedEvent) {
       const summary = `A ${selectedEvent.primary_category.toUpperCase()} attack targeting ${selectedEvent.method} ${selectedEvent.path} was ${selectedEvent.action.toUpperCase()} with an anomaly score of ${selectedEvent.score}. Intercepted threat: ${selectedEvent.findings[0]?.name || selectedEvent.primary_category}. Zero malicious traffic reached your backend servers.`;
@@ -69,7 +67,6 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
     }
   }, [selectedEvent]);
 
-  // Handle external trigger if passed
   useEffect(() => {
     if (externalTrigger?.text) {
       setActiveScript(externalTrigger.text);
@@ -138,7 +135,6 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
     }
   };
 
-  // Sync audio playback rate when speed dropdown changes
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.playbackRate = playbackSpeed;
@@ -154,33 +150,26 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
     window.speechSynthesis.cancel();
     const clean = cleanMarkdownForSpeech(text);
     const utterance = new SpeechSynthesisUtterance(clean);
-    
-    // Apply speed rate
     utterance.rate = playbackSpeed;
 
-    // Apply persona pitch modulation
     if (selectedPersona.id === 'fenrir') {
-      utterance.pitch = 0.85; // Deep authoritative tone
+      utterance.pitch = 0.85;
     } else if (selectedPersona.id === 'sentinel') {
-      utterance.pitch = 1.1;  // Clear analytical tone
+      utterance.pitch = 1.1;
     } else if (selectedPersona.id === 'puck') {
-      utterance.pitch = 1.25; // Energetic tone
+      utterance.pitch = 1.25;
     } else if (selectedPersona.id === 'zephyr') {
-      utterance.pitch = 1.05; // Analytical and crisp
+      utterance.pitch = 1.05;
     } else {
       utterance.pitch = 1.0;
     }
 
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = (e) => {
-      console.error('SpeechSynthesis error:', e);
-      setIsSpeaking(false);
-    };
+    utterance.onerror = () => setIsSpeaking(false);
     window.speechSynthesis.speak(utterance);
   };
 
-  // Instant voice debrief actions
   const handleQuickDebrief = async (actionType: 'incident' | 'scorecard' | 'contract' | 'modes') => {
     setIsLoadingAudio(true);
     setStatusNote(null);
@@ -208,7 +197,6 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
     await speakText(scriptText);
   };
 
-  // Custom inquiry to Voice Sentinel
   const handleCustomQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customInquiry.trim()) return;
@@ -256,7 +244,7 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
   };
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg backdrop-blur-sm">
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
       <audio
         ref={audioRef}
         onEnded={() => setIsSpeaking(false)}
@@ -264,32 +252,30 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
         className="hidden"
       />
 
-      {/* Header bar of Voice Sentinel */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div className="flex items-center gap-3">
           <div className={`flex h-10 w-10 items-center justify-center rounded-lg border ${
             isSpeaking
-              ? 'border-red-500/60 bg-red-500/20 text-red-400'
-              : 'border-slate-700 bg-slate-800 text-slate-400'
+              ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
+              : 'border-slate-200 bg-slate-50 text-slate-600'
           }`}>
             <Bot className="h-5 w-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-white">Cybersecurity Voice Sentinel</h2>
-              <span className="text-xs text-slate-400">· {selectedPersona.name}</span>
+              <h2 className="text-sm font-bold text-slate-900">Cybersecurity Voice Sentinel</h2>
+              <span className="text-xs text-slate-500">· {selectedPersona.name}</span>
               {isSpeaking && (
-                <span className="text-xs text-red-400 font-medium">· Debriefing Live</span>
+                <span className="text-xs text-indigo-700 font-semibold">· Debriefing Live</span>
               )}
             </div>
-            <p className="text-xs text-slate-400">{selectedPersona.title}</p>
+            <p className="text-xs text-slate-500">{selectedPersona.title}</p>
           </div>
         </div>
 
-        {/* Persona Selector & Speed */}
         <div className="flex items-center gap-2">
-          <div className="relative flex items-center gap-1 rounded-lg border border-slate-700/80 bg-slate-800/80 px-2.5 py-1.5 text-xs text-slate-300 hover:border-slate-600 transition-colors">
-            <Headphones className="h-3.5 w-3.5 text-red-400 shrink-0" />
+          <div className="relative flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-700 hover:border-slate-300 transition-colors shadow-2xs">
+            <Headphones className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
             <select
               aria-label="Select Voice Persona"
               value={selectedPersona.id}
@@ -298,26 +284,25 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
                 if (found) {
                   setSelectedPersona(found);
                   if (isSpeaking) {
-                    // Re-trigger speech with new persona if already speaking
                     speakText(activeScript);
                   }
                 }
               }}
-              className="appearance-none bg-transparent text-xs text-slate-200 outline-none cursor-pointer pr-4"
+              className="appearance-none bg-transparent text-xs text-slate-800 outline-none cursor-pointer pr-4 font-medium"
             >
               {AVAILABLE_PERSONAS.map((p) => (
-                <option key={p.id} value={p.id} className="bg-slate-900 text-slate-200">
+                <option key={p.id} value={p.id} className="bg-white text-slate-900">
                   {p.name} ({p.gender})
                 </option>
               ))}
             </select>
             <div className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2">
-              <Sliders className="h-2.5 w-2.5 text-slate-500 rotate-90" />
+              <Sliders className="h-2.5 w-2.5 text-slate-400 rotate-90" />
             </div>
           </div>
 
-          <div className="relative flex items-center gap-1 rounded-lg border border-slate-700/80 bg-slate-800/80 px-2.5 py-1.5 text-xs text-slate-300 hover:border-slate-600 transition-colors">
-            <Sliders className="h-3.5 w-3.5 text-red-400 shrink-0" />
+          <div className="relative flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-700 hover:border-slate-300 transition-colors shadow-2xs">
+            <Sliders className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
             <select
               aria-label="Playback Speed"
               value={playbackSpeed}
@@ -328,31 +313,30 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
                   audioRef.current.playbackRate = rate;
                 }
               }}
-              className="appearance-none bg-transparent text-xs text-slate-200 outline-none cursor-pointer pr-4"
+              className="appearance-none bg-transparent text-xs text-slate-800 outline-none cursor-pointer pr-4 font-medium"
             >
-              <option value="0.8" className="bg-slate-900">0.8x</option>
-              <option value="1.0" className="bg-slate-900">1.0x</option>
-              <option value="1.25" className="bg-slate-900">1.25x</option>
-              <option value="1.5" className="bg-slate-900">1.5x</option>
+              <option value="0.8" className="bg-white">0.8x</option>
+              <option value="1.0" className="bg-white">1.0x</option>
+              <option value="1.25" className="bg-white">1.25x</option>
+              <option value="1.5" className="bg-white">1.5x</option>
             </select>
             <div className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2">
-              <Sliders className="h-2.5 w-2.5 text-slate-500 rotate-90" />
+              <Sliders className="h-2.5 w-2.5 text-slate-400 rotate-90" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Audio Controller Bar with Live Waveform */}
-      <div className="my-4 flex flex-col md:flex-row items-center justify-between gap-4 rounded-lg bg-slate-950/70 border border-slate-800/80 p-3.5">
+      <div className="my-4 flex flex-col md:flex-row items-center justify-between gap-4 rounded-lg bg-slate-50 border border-slate-200 p-3.5 shadow-2xs">
         <div className="flex items-center gap-3 w-full md:w-auto">
           <button
             type="button"
             onClick={handleTogglePlayback}
             disabled={isLoadingAudio}
-            className={`flex h-10 w-10 items-center justify-center rounded-lg text-white font-medium shadow-sm transition-colors cursor-pointer ${
+            className={`flex h-10 w-10 items-center justify-center rounded-lg text-white font-medium shadow-xs transition-colors cursor-pointer ${
               isSpeaking
                 ? 'bg-rose-600 hover:bg-rose-500'
-                : 'bg-red-600 hover:bg-red-500'
+                : 'bg-indigo-600 hover:bg-indigo-500'
             } ${isLoadingAudio ? 'opacity-60 cursor-not-allowed' : ''}`}
             aria-label={isSpeaking ? 'Pause voice debrief' : 'Play voice debrief'}
           >
@@ -368,7 +352,7 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
           <button
             type="button"
             onClick={() => speakText(activeScript)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs"
             aria-label="Replay audio explanation"
           >
             <RotateCcw className="h-4 w-4" />
@@ -381,31 +365,30 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
               setIsMuted(nextMuted);
               if (audioRef.current) audioRef.current.muted = nextMuted;
             }}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs"
             aria-label={isMuted ? 'Unmute voice' : 'Mute voice'}
           >
             {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </button>
 
           <div className="flex flex-col">
-            <span className="text-xs font-semibold text-white">
+            <span className="text-xs font-semibold text-slate-900">
               {isSpeaking ? 'Sentinel Speaking' : isLoadingAudio ? 'Generating Intelligence Audio...' : 'Voice Ready'}
             </span>
-            <span className="text-[11px] text-slate-400">
+            <span className="text-[11px] text-slate-500">
               Neural Voice Synthesizer (24kHz Studio Audio)
             </span>
           </div>
         </div>
 
-        {/* Dynamic Waveform Bars */}
-        <div className="flex items-center gap-1.5 h-7 px-3 py-1 bg-slate-900/90 rounded border border-slate-800/80">
+        <div className="flex items-center gap-1.5 h-7 px-3 py-1 bg-white rounded border border-slate-200 shadow-2xs">
           {[35, 65, 90, 45, 80, 25, 60, 95, 40, 55, 75, 50, 30, 70, 85, 45].map((heightPercent, idx) => (
             <span
               key={idx}
               className={`w-1 rounded-full transition-all duration-150 ${
                 isSpeaking
-                  ? 'bg-red-400 animate-pulse'
-                  : 'bg-slate-700'
+                  ? 'bg-indigo-600 animate-pulse'
+                  : 'bg-slate-300'
               }`}
               style={{
                 height: isSpeaking ? `${Math.max(20, (heightPercent + ((idx * 5) % 35)) % 100)}%` : '20%',
@@ -416,68 +399,65 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
         </div>
       </div>
 
-      {/* Live Transcript Box */}
-      <div className="rounded-lg border border-slate-800/90 bg-slate-950/50 p-3.5">
-        <div className="flex items-center justify-between text-xs text-slate-400 mb-1.5">
-          <span className="font-medium text-slate-300">Sentinel Intelligence Briefing</span>
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3.5 shadow-2xs">
+        <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+          <span className="font-medium text-slate-800">Sentinel Intelligence Briefing</span>
           {audioUrl && (
             <a
               href={audioUrl}
               download="gatekeeper-voice-debrief.wav"
-              className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors"
+              className="flex items-center gap-1 text-indigo-600 hover:text-indigo-700 transition-colors font-medium"
             >
               <Download className="h-3 w-3" />
               <span>Download WAV</span>
             </a>
           )}
         </div>
-        <p className="text-xs text-slate-200 leading-relaxed font-normal">
+        <p className="text-xs text-slate-700 leading-relaxed font-normal">
           "{activeScript}"
         </p>
       </div>
 
-      {/* 4 Instant Quick Spoken Debriefs */}
       <div className="mt-4">
-        <span className="text-xs font-medium text-slate-400 block mb-2">
+        <span className="text-xs font-medium text-slate-600 block mb-2">
           Instant Spoken Briefings:
         </span>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <button
             type="button"
             onClick={() => handleQuickDebrief('incident')}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-800 bg-slate-800/70 px-2.5 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white hover:border-slate-700 transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer shadow-2xs"
           >
-            <Shield className="h-3.5 w-3.5 text-red-400" />
+            <Shield className="h-3.5 w-3.5 text-indigo-600" />
             <span>Debrief Incident</span>
           </button>
           <button
             type="button"
             onClick={() => handleQuickDebrief('scorecard')}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-800 bg-slate-800/70 px-2.5 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white hover:border-slate-700 transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer shadow-2xs"
           >
-            <Award className="h-3.5 w-3.5 text-amber-400" />
+            <Award className="h-3.5 w-3.5 text-amber-600" />
             <span>Scorecard Debrief</span>
           </button>
           <button
             type="button"
             onClick={() => handleQuickDebrief('contract')}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-800 bg-slate-800/70 px-2.5 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white hover:border-slate-700 transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer shadow-2xs"
           >
-            <AlertTriangle className="h-3.5 w-3.5 text-indigo-400" />
+            <AlertTriangle className="h-3.5 w-3.5 text-indigo-600" />
             <span>Contract Guard</span>
           </button>
           <button
             type="button"
             onClick={() => handleQuickDebrief('modes')}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-800 bg-slate-800/70 px-2.5 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white hover:border-slate-700 transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer shadow-2xs"
           >
-            <Volume2 className="h-3.5 w-3.5 text-emerald-400" />
+            <Volume2 className="h-3.5 w-3.5 text-emerald-600" />
             <span>Block vs Monitor</span>
           </button>
         </div>
       </div>
 
-      {/* Ask Sentinel Question Input */}
       <form onSubmit={handleCustomQuestion} className="mt-4 flex items-center gap-2">
         <label htmlFor="sentinel-inquiry" className="sr-only">Ask Voice Sentinel</label>
         <input
@@ -486,12 +466,12 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
           value={customInquiry}
           onChange={(e) => setCustomInquiry(e.target.value)}
           placeholder="Ask Sentinel: e.g. Why was the double-encoded SQLi blocked?"
-          className="flex-1 rounded-lg border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:border-red-500 focus:outline-none"
+          className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-indigo-600 focus:outline-none shadow-2xs"
         />
         <button
           type="submit"
           disabled={isLoadingAudio || !customInquiry.trim()}
-          className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50 transition-colors cursor-pointer shrink-0"
+          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors cursor-pointer shrink-0 shadow-2xs"
         >
           <Send className="h-3.5 w-3.5" />
           <span>Ask Sentinel</span>
@@ -499,7 +479,7 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
       </form>
 
       {statusNote && (
-        <p className="mt-2 text-xs text-amber-400 font-medium">
+        <p className="mt-2 text-xs text-amber-700 font-medium">
           {statusNote}
         </p>
       )}
