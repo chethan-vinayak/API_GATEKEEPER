@@ -446,15 +446,12 @@ export const FirewallRulesView: React.FC<FirewallRulesViewProps> = ({
     };
 
     setRules((prev) => [newRule, ...prev]);
-
-    try {
-      await setDoc(doc(db, 'custom_rules', newRuleId), newRule);
-    } catch {}
-
     setShowCreateModal(false);
     showToast(`Custom Rule "${newRule.name}" active in WAF policy`);
     setCustomName('');
     setCustomRegex('');
+
+    setDoc(doc(db, 'custom_rules', newRuleId), newRule).catch(() => {});
   };
 
   // Toggle Rule Status

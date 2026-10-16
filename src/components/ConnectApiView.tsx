@@ -201,13 +201,11 @@ export const ConnectApiView: React.FC<ConnectApiViewProps> = ({
         setHasUnsavedChanges(false);
         setTestResult(null);
 
-        // Sync to Firestore for all open sessions
-        try {
-          await setDoc(doc(db, 'gateway_config', 'active'), {
-            ...data.status,
-            updatedAt: new Date().toISOString()
-          }, { merge: true });
-        } catch {}
+        // Sync to Firestore for all open sessions in background
+        setDoc(doc(db, 'gateway_config', 'active'), {
+          ...data.status,
+          updatedAt: new Date().toISOString()
+        }, { merge: true }).catch(() => {});
 
         showToast(`Backend "${data.status.activeUpstreamUrl}" is now ACTIVE & protected!`, 'success');
         onRefreshData?.();

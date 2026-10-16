@@ -60,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <div className="flex flex-col">
               <span className="text-sm sm:text-base font-black tracking-widest text-white uppercase font-mono">
-                API SENTINEL
+                API GATEKEEPER
               </span>
             </div>
           </a>

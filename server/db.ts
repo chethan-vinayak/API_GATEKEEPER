@@ -15,7 +15,10 @@ try {
 }
 
 // Runtime resolution for API Key (matching src/firebase.ts fallback)
-const resolvedApiKey = firebaseConfig.apiKey;
+const resolvedApiKey =
+  process.env.VITE_FIREBASE_API_KEY ||
+  process.env.FIREBASE_API_KEY ||
+  firebaseConfig.apiKey;
 
 const activeConfig = {
   ...firebaseConfig,
@@ -27,9 +30,19 @@ let db: any = null;
 let auth: any = null;
 
 if (firebaseConfig.projectId) {
-  const app = initializeApp(activeConfig);
-  db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-  auth = getAuth(app);
+  try {
+    const app = initializeApp(activeConfig);
+    db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+    if (resolvedApiKey) {
+      try {
+        auth = getAuth(app);
+      } catch (authErr) {
+        console.warn('[Gateway] Firebase Auth initialization warning:', authErr);
+      }
+    }
+  } catch (err) {
+    console.error('[Gateway] Failed to initialize Firebase app in Node.js context:', err);
+  }
 }
 
 export { db, auth };

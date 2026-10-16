@@ -379,7 +379,7 @@ export default function App() {
       <footer className="border-t border-slate-900 bg-slate-950/80 py-5 text-center text-xs text-slate-500">
         <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-4">
           <span className="font-mono uppercase font-bold text-slate-400">
-            API SENTINEL · Autonomous Reverse-Proxy & WAF Security Command Center
+            API GATEKEEPER · Autonomous Reverse-Proxy & WAF Security Command Center
           </span>
           <div className="flex items-center gap-4 text-slate-400">
             <span>OWASP CRS Anomaly Scoring</span>
