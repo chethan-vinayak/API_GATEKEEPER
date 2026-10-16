@@ -69,7 +69,7 @@ Protect your users' data even if the backend is compromised. Gatekeeper inspects
 
 ## 🧪 Security Lab (VulnShop)
 Gatekeeper includes a bundled, deliberately vulnerable e-commerce API (**VulnShop**) running on an internal port.
-- **Testing Grounds**: Use the 12-Probe Adversary Suite to launch live attacks against VulnShop and watch the Gatekeeper intercept them in real-time.
+- **Testing Grounds**: Use the 21-Probe Adversary Suite to launch live attacks against VulnShop and watch the Gatekeeper intercept them in real-time.
 - **Zero Configuration**: Connect to the lab instantly with `http://127.0.0.1:9000` and `/openapi.json`.
 
 ---

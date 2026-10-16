@@ -135,7 +135,7 @@ export default function App() {
     }
   };
 
-  // Run Attack Simulator (10 Attacks + 2 Benign = 12 Total Requests)
+  // Run Attack Simulator (18 Attacks + 3 Benign = 21 Total Requests)
   const handleRunSimulation = async () => {
     setIsSimulating(true);
     try {
@@ -287,7 +287,7 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 3: Attack Simulator (10 Attacks + 2 Benign Controls) */}
+        {/* TAB 3: Attack Simulator (18 Attacks + 3 Benign Controls) */}
         {activeTab === 'simulator' && (
           <div id="panel-simulator" role="tabpanel">
             <AttackSimulatorView
