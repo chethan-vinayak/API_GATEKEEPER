@@ -75,51 +75,64 @@ export const LiveAttackFeed: React.FC<LiveAttackFeedProps> = ({
           </span>
         </div>
 
-        {/* Filter Segmented Controls */}
-        <div className="flex items-center gap-1 p-1 bg-slate-950 rounded-lg border border-slate-800">
+        {/* Enterprise Flat Tab Navigation */}
+        <div className="flex items-center gap-6 border-b border-slate-800/80 pb-px">
           <button
             type="button"
             onClick={() => setActionFilter('all')}
-            className={`px-2.5 py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
+            className={`pb-2 text-xs font-mono font-bold transition-all cursor-pointer border-b-2 flex items-center gap-1.5 ${
               actionFilter === 'all'
-                ? 'bg-slate-800 text-white shadow-sm font-semibold'
-                : 'text-slate-400 hover:text-white'
+                ? 'border-red-500 text-white'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            All
+            <span>All Probes</span>
+            <span className="text-[10px] text-slate-500 font-mono tabular-nums">({events.length})</span>
           </button>
+
           <button
             type="button"
             onClick={() => setActionFilter('blocked')}
-            className={`px-2.5 py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
+            className={`pb-2 text-xs font-mono font-bold transition-all cursor-pointer border-b-2 flex items-center gap-1.5 ${
               actionFilter === 'blocked'
-                ? 'bg-red-950 text-red-300 font-semibold border border-red-800/60'
-                : 'text-slate-400 hover:text-white'
+                ? 'border-red-500 text-red-400'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            Blocked
+            <span>Blocked</span>
+            <span className="text-[10px] text-slate-500 font-mono tabular-nums">
+              ({events.filter(e => e.action === 'blocked' || e.action === 'banned').length})
+            </span>
           </button>
+
           <button
             type="button"
             onClick={() => setActionFilter('rate_limited')}
-            className={`px-2.5 py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
+            className={`pb-2 text-xs font-mono font-bold transition-all cursor-pointer border-b-2 flex items-center gap-1.5 ${
               actionFilter === 'rate_limited'
-                ? 'bg-amber-950 text-amber-300 font-semibold border border-amber-800/60'
-                : 'text-slate-400 hover:text-white'
+                ? 'border-amber-500 text-amber-400'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            429s
+            <span>429 Throttled</span>
+            <span className="text-[10px] text-slate-500 font-mono tabular-nums">
+              ({events.filter(e => e.action === 'rate_limited').length})
+            </span>
           </button>
+
           <button
             type="button"
             onClick={() => setActionFilter('allowed')}
-            className={`px-2.5 py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
+            className={`pb-2 text-xs font-mono font-bold transition-all cursor-pointer border-b-2 flex items-center gap-1.5 ${
               actionFilter === 'allowed'
-                ? 'bg-emerald-950 text-emerald-300 font-semibold border border-emerald-800/60'
-                : 'text-slate-400 hover:text-white'
+                ? 'border-emerald-500 text-emerald-400'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            Allowed
+            <span>Allowed</span>
+            <span className="text-[10px] text-slate-500 font-mono tabular-nums">
+              ({events.filter(e => e.action === 'allowed' || e.action === 'flagged').length})
+            </span>
           </button>
         </div>
       </div>

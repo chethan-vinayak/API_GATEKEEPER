@@ -22,6 +22,7 @@ import type {
   GatewayMode,
   ScorecardResult
 } from './gateway/types.ts';
+import { ConnectApiView } from './components/ConnectApiView.tsx';
 
 // Clean baseline stats: zero hardcoded pre-existing numbers
 const CLEAN_ZERO_STATS: GatewayStats = {
@@ -228,10 +229,10 @@ export default function App() {
       />
 
       {/* Main Viewport Container */}
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <main className="flex-1 mx-auto w-full max-w-[1600px] px-4 sm:px-8 lg:px-12 py-6 space-y-6">
         {/* TAB 1: Enhanced Live Dashboard */}
         {activeTab === 'dashboard' && (
-          <div className="space-y-6">
+          <div className="space-y-6" id="panel-dashboard" role="tabpanel">
             {/* 7 Clean Real-Time KPI Cards (Clean Baseline: starts at 0, no prior mock data) */}
             <DashboardKpi stats={stats} mode={mode} />
 
@@ -278,34 +279,40 @@ export default function App() {
 
         {/* TAB 2: Request Lab (User Input Area) */}
         {activeTab === 'tester' && (
-          <RequestLabView
-            onVoiceDebrief={handleVoiceDebrief}
-            onRefreshData={refreshData}
-          />
+          <div id="panel-tester" role="tabpanel">
+            <RequestLabView
+              onVoiceDebrief={handleVoiceDebrief}
+              onRefreshData={refreshData}
+            />
+          </div>
         )}
 
         {/* TAB 3: Attack Simulator (10 Attacks + 2 Benign Controls) */}
         {activeTab === 'simulator' && (
-          <AttackSimulatorView
-            onRunSimulation={handleRunSimulation}
-            isSimulating={isSimulating}
-            simulationResults={simulationResults}
-            mode={mode}
-            onVoiceDebrief={handleVoiceDebrief}
-          />
+          <div id="panel-simulator" role="tabpanel">
+            <AttackSimulatorView
+              onRunSimulation={handleRunSimulation}
+              isSimulating={isSimulating}
+              simulationResults={simulationResults}
+              mode={mode}
+              onVoiceDebrief={handleVoiceDebrief}
+            />
+          </div>
         )}
 
         {/* TAB 4: WAF Policy & Firewall Rules Manager */}
         {activeTab === 'rules' && (
-          <FirewallRulesView
-            onVoiceDebrief={(txt) => handleVoiceDebrief(txt)}
-            onRefreshData={refreshData}
-          />
+          <div id="panel-rules" role="tabpanel">
+            <FirewallRulesView
+              onVoiceDebrief={(txt) => handleVoiceDebrief(txt)}
+              onRefreshData={refreshData}
+            />
+          </div>
         )}
 
         {/* TAB 5: Dedicated Voice Sentinel Command Center (Voice Assistant is ONLY highlighted here!) */}
         {activeTab === 'voice' && (
-          <div className="space-y-6">
+          <div className="space-y-6" id="panel-voice" role="tabpanel">
             <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-5">
               <h2 className="text-base font-bold text-white uppercase font-mono tracking-wide mb-1">
                 Voice Sentinel Command Center & Audio Telemetry
@@ -329,6 +336,16 @@ export default function App() {
               events={events}
               onSelectEvent={setInspectedEvent}
               onVoiceDebrief={handleVoiceDebrief}
+            />
+          </div>
+        )}
+        {/* TAB 6: API Connection & OpenAPI Integration Command Center */}
+        {activeTab === 'connect' && (
+          <div id="panel-connect" role="tabpanel">
+            <ConnectApiView
+              userSession={userSession}
+              onVoiceDebrief={handleVoiceDebrief}
+              onRefreshData={refreshData}
             />
           </div>
         )}
@@ -360,9 +377,9 @@ export default function App() {
 
       {/* Professional Footer */}
       <footer className="border-t border-slate-900 bg-slate-950/80 py-5 text-center text-xs text-slate-500">
-        <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-4">
           <span className="font-mono uppercase font-bold text-slate-400">
-            API GATEKEEPER · Autonomous Reverse-Proxy & WAF Security Command Center
+            API SENTINEL · Autonomous Reverse-Proxy & WAF Security Command Center
           </span>
           <div className="flex items-center gap-4 text-slate-400">
             <span>OWASP CRS Anomaly Scoring</span>

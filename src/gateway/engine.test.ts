@@ -6,7 +6,9 @@ import {
   evaluateContract,
   evaluateSignatures,
   calculateDecision,
-  TokenBucket
+  TokenBucket,
+  maskSensitiveData,
+  ipInCidr
 } from './engine.ts';
 
 test('normalizeTarget handles multi-decode and collapses comments', () => {
@@ -135,3 +137,20 @@ test('TokenBucket enforces rate limits correctly', () => {
   assert.equal(bucket.consume(), true);
   assert.equal(bucket.consume(), false); // 4th request must be rate limited
 });
+
+test('maskSensitiveData detects and redacts SSNs and Credit Cards', () => {
+  const raw = 'Customer SSN: 123-45-6789 and Card: 4111111111111111';
+  const { masked, findings } = maskSensitiveData(raw);
+  assert.ok(findings.includes('Detected SSN patterns'));
+  assert.ok(findings.includes('Detected Credit Card numbers'));
+  assert.ok(masked.includes('XXX-XX-XXXX'));
+  assert.ok(masked.includes('XXXX-XXXX-XXXX-XXXX'));
+});
+
+test('ipInCidr correctly validates IP against range', () => {
+  assert.equal(ipInCidr('10.0.0.5', '10.0.0.0/8'), true);
+  assert.equal(ipInCidr('192.168.1.5', '192.168.1.0/24'), true);
+  assert.equal(ipInCidr('172.16.0.5', '172.31.0.0/16'), false);
+  assert.equal(ipInCidr('8.8.8.8', '8.8.8.8'), true);
+});
+

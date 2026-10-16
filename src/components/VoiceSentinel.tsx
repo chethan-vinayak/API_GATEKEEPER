@@ -12,9 +12,11 @@ import {
   Download,
   AlertTriangle,
   Award,
-  Bot
+  Bot,
+  ChevronDown
 } from 'lucide-react';
 import type { SecurityEvent, ScorecardResult } from '../gateway/types.ts';
+import { cleanMarkdownForSpeech } from '../utils/ai-helpers.ts';
 
 interface VoiceSentinelProps {
   selectedEvent: SecurityEvent | null;
@@ -95,7 +97,8 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
     await speakText(activeScript);
   };
 
-  const speakText = async (textToSpeak: string) => {
+  const speakText = async (rawText: string) => {
+    const textToSpeak = cleanMarkdownForSpeech(rawText);
     stopAudio();
     setIsLoadingAudio(true);
     setStatusNote(null);
@@ -135,6 +138,13 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
     }
   };
 
+  // Sync audio playback rate when speed dropdown changes
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = playbackSpeed;
+    }
+  }, [playbackSpeed]);
+
   const fallbackSpeech = (text: string) => {
     if (!('speechSynthesis' in window)) {
       setStatusNote('Speech synthesis not supported in this browser.');
@@ -142,13 +152,32 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
       return;
     }
     window.speechSynthesis.cancel();
-    const clean = text.replace(/[*_`#]/g, '');
+    const clean = cleanMarkdownForSpeech(text);
     const utterance = new SpeechSynthesisUtterance(clean);
+    
+    // Apply speed rate
     utterance.rate = playbackSpeed;
+
+    // Apply persona pitch modulation
+    if (selectedPersona.id === 'fenrir') {
+      utterance.pitch = 0.85; // Deep authoritative tone
+    } else if (selectedPersona.id === 'sentinel') {
+      utterance.pitch = 1.1;  // Clear analytical tone
+    } else if (selectedPersona.id === 'puck') {
+      utterance.pitch = 1.25; // Energetic tone
+    } else if (selectedPersona.id === 'zephyr') {
+      utterance.pitch = 1.05; // Analytical and crisp
+    } else {
+      utterance.pitch = 1.0;
+    }
+
+    utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+    utterance.onerror = (e) => {
+      console.error('SpeechSynthesis error:', e);
+      setIsSpeaking(false);
+    };
     window.speechSynthesis.speak(utterance);
-    setIsSpeaking(true);
   };
 
   // Instant voice debrief actions
@@ -259,16 +288,22 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
 
         {/* Persona Selector & Speed */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 rounded-lg border border-slate-700/80 bg-slate-800/80 px-2 py-1 text-xs text-slate-300">
-            <Headphones className="h-3.5 w-3.5 text-red-400" />
+          <div className="relative flex items-center gap-1 rounded-lg border border-slate-700/80 bg-slate-800/80 px-2.5 py-1.5 text-xs text-slate-300 hover:border-slate-600 transition-colors">
+            <Headphones className="h-3.5 w-3.5 text-red-400 shrink-0" />
             <select
               aria-label="Select Voice Persona"
               value={selectedPersona.id}
               onChange={(e) => {
                 const found = AVAILABLE_PERSONAS.find(p => p.id === e.target.value);
-                if (found) setSelectedPersona(found);
+                if (found) {
+                  setSelectedPersona(found);
+                  if (isSpeaking) {
+                    // Re-trigger speech with new persona if already speaking
+                    speakText(activeScript);
+                  }
+                }
               }}
-              className="bg-transparent text-xs text-slate-200 outline-none cursor-pointer"
+              className="appearance-none bg-transparent text-xs text-slate-200 outline-none cursor-pointer pr-4"
             >
               {AVAILABLE_PERSONAS.map((p) => (
                 <option key={p.id} value={p.id} className="bg-slate-900 text-slate-200">
@@ -276,25 +311,33 @@ export const VoiceSentinel: React.FC<VoiceSentinelProps> = ({
                 </option>
               ))}
             </select>
+            <div className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2">
+              <Sliders className="h-2.5 w-2.5 text-slate-500 rotate-90" />
+            </div>
           </div>
 
-          <div className="flex items-center gap-1 rounded-lg border border-slate-700/80 bg-slate-800/80 px-2 py-1 text-xs text-slate-300">
-            <Sliders className="h-3.5 w-3.5 text-red-400" />
+          <div className="relative flex items-center gap-1 rounded-lg border border-slate-700/80 bg-slate-800/80 px-2.5 py-1.5 text-xs text-slate-300 hover:border-slate-600 transition-colors">
+            <Sliders className="h-3.5 w-3.5 text-red-400 shrink-0" />
             <select
               aria-label="Playback Speed"
               value={playbackSpeed}
               onChange={(e) => {
                 const rate = parseFloat(e.target.value);
                 setPlaybackSpeed(rate);
-                if (audioRef.current) audioRef.current.playbackRate = rate;
+                if (audioRef.current) {
+                  audioRef.current.playbackRate = rate;
+                }
               }}
-              className="bg-transparent text-xs text-slate-200 outline-none cursor-pointer"
+              className="appearance-none bg-transparent text-xs text-slate-200 outline-none cursor-pointer pr-4"
             >
               <option value="0.8" className="bg-slate-900">0.8x</option>
               <option value="1.0" className="bg-slate-900">1.0x</option>
               <option value="1.25" className="bg-slate-900">1.25x</option>
               <option value="1.5" className="bg-slate-900">1.5x</option>
             </select>
+            <div className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2">
+              <Sliders className="h-2.5 w-2.5 text-slate-500 rotate-90" />
+            </div>
           </div>
         </div>
       </div>

@@ -45,6 +45,25 @@
         "lastActive": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email", "role"]
+    },
+    "GatewayConfig": {
+      "title": "Gateway Configuration",
+      "description": "Active perimeter settings, upstream backend URL, and OpenAPI contract",
+      "type": "object",
+      "properties": {
+        "activeUpstreamUrl": { "type": "string", "maxLength": 512 },
+        "activeOpenApiPath": { "type": "string", "maxLength": 256 },
+        "reachability": { "type": "string", "maxLength": 32 },
+        "contractValid": { "type": "boolean" },
+        "apiTitle": { "type": "string", "maxLength": 128 },
+        "apiVersion": { "type": "string", "maxLength": 32 },
+        "operationsCount": { "type": "number" },
+        "discoveredRoutes": { "type": "array" },
+        "lastCheckedAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "mode": { "type": "string", "maxLength": 32 }
+      },
+      "required": ["activeUpstreamUrl"]
     }
   },
   "firestore": {
@@ -59,6 +78,10 @@
     "/users/{userId}": {
       "schema": { "$ref": "#/entities/UserProfile" },
       "description": "Operator user accounts and clearance credentials"
+    },
+    "/gateway_config/active": {
+      "schema": { "$ref": "#/entities/GatewayConfig" },
+      "description": "Global active gateway configuration state"
     }
   }
 }

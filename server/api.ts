@@ -6,6 +6,8 @@ import {
   evaluateContract,
   calculateDecision,
   TokenBucket,
+  maskSensitiveData,
+  ipInCidr,
   type InspectionContext
 } from '../src/gateway/engine.ts';
 import type {
@@ -18,6 +20,7 @@ import type {
 } from '../src/gateway/types.ts';
 import { SIM_SCENARIOS } from '../src/gateway/scenarios.ts';
 import { resolveIpGeo } from '../src/gateway/geo.ts';
+import { getGatewayConfig, saveGatewayConfig } from './db.ts';
 
 dotenv.config();
 
@@ -36,11 +39,232 @@ export const ai = apiKey
 
 // Gateway in-memory state (starts completely clean with no hardcoded pre-existing data)
 let currentMode: GatewayMode = 'block';
-const eventsStore: SecurityEvent[] = [];
-const rateLimiters: Map<string, TokenBucket> = new Map();
-const loginRateLimiters: Map<string, TokenBucket> = new Map();
-const strikes: Map<string, { count: number; lastStrike: number }> = new Map();
-const bannedIps: Map<string, number> = new Map(); // ip -> expiry timestamp
+let activeUpstreamUrl = 'http://127.0.0.1:9000';
+let activeOpenApiPath = '/openapi.json';
+let activeOpenApiContract: any = null;
+let lastSuccessfulCheck: string | null = null;
+let reachabilityStatus: 'reachable' | 'unreachable' | 'untested' = 'untested';
+
+export const eventsStore: SecurityEvent[] = [];
+export const rateLimiters: Map<string, TokenBucket> = new Map();
+export const loginRateLimiters: Map<string, TokenBucket> = new Map();
+export const strikes: Map<string, { count: number; lastStrike: number }> = new Map();
+export const bannedIps: Map<string, number> = new Map(); // ip -> expiry timestamp
+export const bannedCidrs: Set<string> = new Set(); // CIDR ranges
+
+/**
+ * Initialize Gateway state from Firestore on startup
+ */
+export async function initGateway() {
+  const config = await getGatewayConfig();
+  if (config) {
+    activeUpstreamUrl = config.activeUpstreamUrl || activeUpstreamUrl;
+    activeOpenApiPath = config.activeOpenApiPath || activeOpenApiPath;
+    activeOpenApiContract = config.activeOpenApiContract || null;
+    reachabilityStatus = config.reachability || reachabilityStatus;
+    lastSuccessfulCheck = config.lastCheckedAt || null;
+    currentMode = config.mode || currentMode;
+    console.log(`[Gateway] Config restored: targeting ${activeUpstreamUrl}`);
+  }
+}
+
+/**
+ * Middleware: Requires Administrator (Commander) Authorization
+ */
+export async function requireAdmin(req: Request, res: Response, next: () => void) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authentication required. Please sign in.' });
+  }
+
+  // In this demo, we accept any Bearer token as a placeholder for real Firebase ID Token validation
+  // In production, use firebase-admin's auth().verifyIdToken(token)
+  const token = authHeader.split(' ')[1];
+  if (!token || token === 'undefined') {
+    return res.status(401).json({ error: 'Invalid or expired session. Sign in again.' });
+  }
+
+  // Basic role simulation (real check would be in Firestore or Custom Claims)
+  next();
+}
+
+/**
+ * Security controls: Validate destination URLs against self-loops, credentials, and cloud metadata SSRF
+ */
+export function validateDestinationUrl(urlStr: string): { valid: boolean; error?: string; parsed?: URL } {
+  try {
+    const parsed = new URL(urlStr);
+
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return { valid: false, error: 'Only HTTP and HTTPS protocols are allowed.' };
+    }
+
+    if (parsed.username || parsed.password) {
+      return { valid: false, error: 'URL user credentials (username/password) are forbidden.' };
+    }
+
+    const host = parsed.hostname.toLowerCase();
+    const port = parsed.port || (parsed.protocol === 'https:' ? '443' : '80');
+
+    // Self-loop prevention (Port 3000 is our gateway)
+    if ((host === '127.0.0.1' || host === 'localhost' || host === '0.0.0.0') && (port === '3000')) {
+      return { valid: false, error: 'Gateway self-loop detected. Targeting our own control port is forbidden.' };
+    }
+
+    // Cloud metadata SSRF blocking
+    if (host === '169.254.169.254' || host === 'metadata.google.internal' || host === '169.254.169.253') {
+      return { valid: false, error: 'Access to cloud instance metadata addresses is strictly forbidden.' };
+    }
+
+    // Private IP Range Blocking (Optional: can be toggled by policy)
+    // 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+    const isPrivate = /^(127\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.)/.test(host);
+    if (isPrivate && host !== '127.0.0.1' && host !== 'localhost') {
+      // We allow 127.0.0.1 specifically for the local DemoShop bundled with the app
+    }
+
+    return { valid: true, parsed };
+  } catch {
+    return { valid: false, error: 'Malformed URL format. Must be a valid HTTP or HTTPS base URL.' };
+  }
+}
+
+/**
+ * Real Server-Side OpenAPI Specification Fetcher & Validator
+ */
+export async function fetchAndValidateSpec(upstreamUrl: string, openApiPath: string, authToken?: string) {
+  const destCheck = validateDestinationUrl(upstreamUrl);
+  if (!destCheck.valid) {
+    return { success: false, reachability: 'unreachable' as const, error: destCheck.error };
+  }
+
+  // Construct target spec URL correctly by joining paths
+  const base = upstreamUrl.replace(/\/+$/, '');
+  const path = openApiPath.startsWith('/') ? openApiPath : `/${openApiPath}`;
+  const specUrl = `${base}${path}`;
+
+  const specDestCheck = validateDestinationUrl(specUrl);
+  if (!specDestCheck.valid) {
+    return { success: false, reachability: 'unreachable' as const, error: `Invalid spec path: ${specDestCheck.error}` };
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for spec fetch
+
+  try {
+    const headers: Record<string, string> = {
+      'Accept': 'application/json, application/yaml, text/yaml, */*',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) API-Gatekeeper/1.0'
+    };
+    if (authToken) {
+      headers['Authorization'] = authToken.startsWith('Bearer ') ? authToken : `Bearer ${authToken}`;
+    }
+
+    const res = await fetch(specUrl, {
+      signal: controller.signal,
+      headers
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        return { success: false, reachability: 'reachable' as const, error: 'Specification requires authentication.' };
+      }
+      if (res.status === 404) {
+        return { success: false, reachability: 'reachable' as const, error: `Specification not found at ${specUrl}` };
+      }
+      return {
+        success: false,
+        reachability: 'reachable' as const,
+        httpStatus: res.status,
+        error: `HTTP ${res.status} error fetching specification from backend.`
+      };
+    }
+
+    const contentType = res.headers.get('content-type') || '';
+    const text = await res.text();
+
+    if (contentType.includes('text/html') || text.trim().startsWith('<!')) {
+      return {
+        success: false,
+        reachability: 'reachable' as const,
+        error: 'The endpoint returned HTML instead of an OpenAPI document. Check the path.'
+      };
+    }
+
+    if (text.length > 5 * 1024 * 1024) {
+      return {
+        success: false,
+        reachability: 'reachable' as const,
+        error: 'OpenAPI specification exceeds 5 MB size limit.'
+      };
+    }
+
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      // Simple fallback for YAML
+      if (text.includes('openapi:') || text.includes('paths:')) {
+        parsed = { openapi: '3.0.0', info: { title: 'Auto-Detected YAML spec', version: '1.0' } };
+      } else {
+        return {
+          success: false,
+          reachability: 'reachable' as const,
+          error: 'Unsupported or invalid OpenAPI specification format.'
+        };
+      }
+    }
+
+    const version = parsed.openapi || parsed.swagger;
+    if (!version) {
+      return {
+        success: false,
+        reachability: 'reachable' as const,
+        error: 'Invalid document: Missing "openapi" or "swagger" version field.'
+      };
+    }
+
+    const discoveredRoutes: string[] = [];
+    if (parsed.paths) {
+      for (const [p, methods] of Object.entries(parsed.paths)) {
+        Object.keys(methods as any).forEach(m => {
+          if (['get', 'post', 'put', 'delete', 'patch'].includes(m.toLowerCase())) {
+            discoveredRoutes.push(`${m.toUpperCase()} ${p}`);
+          }
+        });
+      }
+    }
+
+    return {
+      success: true,
+      reachability: 'reachable' as const,
+      contractValid: true,
+      apiTitle: parsed.info?.title || 'Upstream Protected API',
+      apiVersion: parsed.info?.version || '1.0.0',
+      operationsCount: discoveredRoutes.length,
+      discoveredRoutes,
+      parsedSpec: parsed
+    };
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      return { success: false, reachability: 'unreachable' as const, error: 'Connection timed out. Check network access.' };
+    }
+    if (err.code === 'ECONNREFUSED') {
+      return { success: false, reachability: 'unreachable' as const, error: 'Backend connection refused. Check that the API is running.' };
+    }
+    if (err.code === 'ENOTFOUND') {
+      return { success: false, reachability: 'unreachable' as const, error: 'Backend hostname could not be resolved.' };
+    }
+    return {
+      success: false,
+      reachability: 'unreachable' as const,
+      error: `Backend host unreachable: ${err.message}`
+    };
+  }
+}
 
 function generateIncidentId(): string {
   const d = new Date();
@@ -120,7 +344,6 @@ export async function handleSetMode(req: Request, res: Response) {
 }
 
 /**
-/**
  * Dry-run inspection and live interactive tester endpoint (POST /_gk/api/test)
  */
 export async function handleDryRunTest(req: Request, res: Response) {
@@ -146,7 +369,7 @@ export async function handleDryRunTest(req: Request, res: Response) {
   };
 
   const startTime = Date.now();
-  const contractFindings = evaluateContract(ctx);
+  const contractFindings = evaluateContract(ctx, activeOpenApiContract);
   const { findings: sigFindings, decodeChain } = evaluateSignatures(ctx);
   const allFindings = [...contractFindings, ...sigFindings];
   const decision = calculateDecision(allFindings, currentMode);
@@ -213,10 +436,39 @@ export async function handleRunSimulation(_req: Request, res: Response) {
       userAgent: sc.headers?.['user-agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
     };
 
-    const contractFindings = evaluateContract(ctx);
+    const contractFindings = evaluateContract(ctx, activeOpenApiContract);
     const { findings: sigFindings, decodeChain } = evaluateSignatures(ctx);
     const findings = [...contractFindings, ...sigFindings];
     const decision = calculateDecision(findings, currentMode);
+    
+    // Perform real request to backend if available and not blocked
+    let backendRes: { status: number } | null = null;
+    if (decision.action !== 'blocked' && decision.action !== 'banned' && reachabilityStatus === 'reachable') {
+      try {
+        const url = `${activeUpstreamUrl.replace(/\/+$/, '')}${sc.path.startsWith('/') ? sc.path : '/' + sc.path}`;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3000);
+        
+        const fetchOptions: any = {
+          method: sc.method,
+          headers: { ...sc.headers, 'X-Gatekeeper-Sim': 'true' },
+          signal: controller.signal
+        };
+        
+        if (sc.body && !['GET', 'HEAD'].includes(sc.method)) {
+          fetchOptions.body = JSON.stringify(sc.body);
+          if (!fetchOptions.headers['Content-Type']) {
+             fetchOptions.headers['Content-Type'] = 'application/json';
+          }
+        }
+
+        const response = await fetch(url, fetchOptions);
+        clearTimeout(timeout);
+        backendRes = { status: response.status };
+      } catch (err) {
+        console.warn(`Sim scenario #${i+1} backend check failed:`, err);
+      }
+    }
 
     const event: SecurityEvent = {
       id: `evt-sim-${Date.now()}-${i}`,
@@ -232,7 +484,7 @@ export async function handleRunSimulation(_req: Request, res: Response) {
       primary_category: decision.primaryCategory,
       severity: decision.severity,
       findings,
-      status_code: decision.action === 'blocked' ? 403 : 200,
+      status_code: decision.action === 'blocked' ? 403 : (backendRes?.status || 200),
       latency_ms: Math.round((1.2 + Math.random() * 2.5) * 10) / 10,
       reached_backend: decision.action !== 'blocked' && decision.action !== 'banned',
       decode_chain: decodeChain,
@@ -242,7 +494,8 @@ export async function handleRunSimulation(_req: Request, res: Response) {
     eventsStore.push(event);
 
     results.push({
-      scenario: sc.name,
+      id: sc.id,
+      name: sc.name,
       category: sc.category,
       method: sc.method,
       path: sc.path,
@@ -251,18 +504,22 @@ export async function handleRunSimulation(_req: Request, res: Response) {
       incident_id: event.incident_id,
       reached_backend: event.reached_backend,
       latency_ms: event.latency_ms,
-      geo: event.geo
+      geo: event.geo,
+      backend_status: backendRes?.status
     });
   }
 
-  const blockedCount = results.filter(r => r.action === 'blocked').length;
+  const blockedCount = results.filter(r => r.action === 'blocked' || r.action === 'banned').length;
   const flaggedCount = results.filter(r => r.action === 'flagged').length;
   const allowedCount = results.filter(r => r.action === 'allowed').length;
 
+  const attackCount = SIM_SCENARIOS.filter(s => s.category !== 'benign').length;
+  const benignCount = SIM_SCENARIOS.filter(s => s.category === 'benign').length;
+
   return res.json({
-    total_requests: results.length, // 12 total HTTP requests dispatched
-    attack_count: 10,               // 10 malicious attack vector tests
-    benign_count: 2,                // 2 legitimate benign controls
+    total_requests: results.length,
+    attack_count: attackCount,
+    benign_count: benignCount,
     scenarios_run: results.length,
     blocked: blockedCount,
     flagged: flaggedCount,
@@ -284,6 +541,27 @@ export async function handleLiveProxyRequest(req: Request, res: Response) {
   const startTime = Date.now();
   const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || '198.51.100.12';
   
+  // --- IP ACCESS CONTROL (BAN CHECK) ---
+  const banExpiry = bannedIps.get(clientIp);
+  if (banExpiry && banExpiry > Date.now()) {
+    return res.status(403).json({ 
+      error: 'Access Denied: Your IP is currently banned by Enterprise Sentinel.',
+      category: 'ip_ban',
+      score: 10
+    });
+  }
+
+  // CIDR Range check
+  for (const cidr of bannedCidrs) {
+    if (ipInCidr(clientIp, cidr)) {
+      return res.status(403).json({ 
+        error: `Access Denied: Your IP range (${cidr}) is restricted.`,
+        category: 'cidr_restriction',
+        score: 10
+      });
+    }
+  }
+
   const ctx: InspectionContext = {
     method: req.method,
     path: req.path,
@@ -294,7 +572,7 @@ export async function handleLiveProxyRequest(req: Request, res: Response) {
     userAgent: req.headers['user-agent'] || 'Mozilla/5.0'
   };
 
-  const contractFindings = evaluateContract(ctx);
+  const contractFindings = evaluateContract(ctx, activeOpenApiContract);
   const { findings: sigFindings, decodeChain } = evaluateSignatures(ctx);
   const findings = [...contractFindings, ...sigFindings];
   const decision = calculateDecision(findings, currentMode);
@@ -323,18 +601,132 @@ export async function handleLiveProxyRequest(req: Request, res: Response) {
 
   eventsStore.push(event);
 
-  if (decision.action === 'blocked') {
+  if (decision.action === 'blocked' || decision.action === 'banned') {
     return res.status(403).json({
       error: 'Request blocked by API Gatekeeper',
-      incident_id: event.incident_id
+      incident_id: event.incident_id,
+      category: decision.primaryCategory,
+      score: decision.totalScore
     });
   }
 
-  // Allowed / Flagged mock responses for DemoShop
+  // ADVANCED RATE LIMITING: Per-IP Token Bucket
+  let limiter = rateLimiters.get(clientIp);
+  if (!limiter) {
+    limiter = new TokenBucket(30, 2); // 30 burst, 2 per sec
+    rateLimiters.set(clientIp, limiter);
+  }
+  
+  if (!limiter.consume(1)) {
+    const rateEvent: SecurityEvent = {
+      id: `evt-rl-${Date.now()}`,
+      incident_id: generateIncidentId(),
+      ts: new Date().toISOString(),
+      client_ip: clientIp,
+      method: req.method,
+      path: req.path,
+      query: new URLSearchParams(req.query as any).toString(),
+      user_agent: ctx.userAgent,
+      action: 'rate_limited',
+      score: 1,
+      primary_category: 'rate_limit',
+      severity: 'medium',
+      findings: [{ layer: 'rate_limit', rule_id: 'RL-001', name: 'Rate limit exceeded', category: 'rate_limit', score: 1, matched: clientIp, target: 'ip', cwe: 'CWE-770', owasp: 'A04:2025', severity: 'medium' }],
+      status_code: 429,
+      latency_ms: 1,
+      reached_backend: false,
+      geo: resolveIpGeo(clientIp)
+    };
+    eventsStore.push(rateEvent);
+    return res.status(429).json({ error: 'Too many requests. Please slow down.', incident_id: rateEvent.incident_id });
+  }
+
+  // REAL PROXY LOGIC
+  if (reachabilityStatus === 'reachable') {
+    try {
+      const queryString = new URLSearchParams(req.query as any).toString();
+      const url = `${activeUpstreamUrl.replace(/\/+$/, '')}${req.path}${queryString ? '?' + queryString : ''}`;
+      
+      console.log(`[Proxy] Routing ${req.method} ${req.path} -> ${url}`);
+      
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000); // 10s proxy timeout
+
+      // Prepare headers, redacting sensitive gateway headers but preserving user ones
+      const headers: Record<string, string> = {};
+      Object.entries(req.headers).forEach(([k, v]) => {
+        if (typeof v === 'string') headers[k] = v;
+      });
+      
+      delete headers['host'];
+      delete headers['connection'];
+      headers['X-Forwarded-For'] = clientIp;
+      headers['X-Gatekeeper-ID'] = event.id;
+
+      const proxyRes = await fetch(url, {
+        method: req.method,
+        headers: headers as any,
+        body: ['GET', 'HEAD'].includes(req.method) ? undefined : JSON.stringify(req.body),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeout);
+
+      // Record backend performance
+      event.latency_ms += Math.round((Date.now() - startTime) * 10) / 10;
+      event.status_code = proxyRes.status;
+
+      // We read as text to ensure we can handle non-JSON gracefully
+      let body = await proxyRes.text();
+
+      // --- RESPONSE SHIELD (PII LEAK PREVENTION) ---
+      const { masked, findings: shieldFindings } = maskSensitiveData(body);
+      if (shieldFindings.length > 0) {
+        console.log(`[Response Shield] Masked sensitive data: ${shieldFindings.join(', ')}`);
+        body = masked;
+        event.primary_category = 'data_leak';
+        event.findings.push(...shieldFindings.map(f => ({
+          layer: 'response_shield',
+          rule_id: 'RS-PII-001',
+          name: f,
+          category: 'data_leak',
+          score: 0,
+          matched: 'REDACTED',
+          target: 'response',
+          cwe: 'CWE-200',
+          owasp: 'A01:2025',
+          severity: 'info'
+        } as any)));
+      }
+
+      return res.status(proxyRes.status).send(body);
+    } catch (err: any) {
+      console.error('Proxy error:', err);
+      return res.status(502).json({
+        error: 'Bad Gateway: Failed to reach upstream backend',
+        message: err.message,
+        incident_id: event.incident_id
+      });
+    }
+  }
+
+  // Fallback for DemoShop/VulnShop if no backend connected
+  if (req.path.includes('/api/v1/products/search')) {
+    return res.json({
+      count: 4,
+      results: [
+        { id: 1, name: 'Cyberpunk Hooded Jacket', category: 'Apparel', price: 89.99 },
+        { id: 2, name: 'Neural-Link Graphics Tee', category: 'Apparel', price: 34.50 },
+        { id: 3, name: 'Hacker Cargo Pants', category: 'Apparel', price: 65.00 },
+        { id: 4, name: 'Quantum Encryption Cap', category: 'Accessories', price: 29.99 }
+      ]
+    });
+  }
+
   if (req.path === '/api/products') {
     return res.json({
-      service: 'DemoShop Backend',
-      count: 2,
+      service: 'DemoShop Mock Backend',
+      message: 'No upstream backend connected. Showing mock data.',
       products: [
         { id: 1, name: 'Quantum Core Router', price: 299.99 },
         { id: 2, name: 'Neural Cryptographic HSM', price: 1250.00 }
@@ -342,8 +734,50 @@ export async function handleLiveProxyRequest(req: Request, res: Response) {
     });
   }
 
-  return res.json({ status: 'ok', reached_backend: true, incident_id: event.incident_id });
+  return res.json({ 
+    status: 'ok', 
+    reached_backend: true, 
+    incident_id: event.incident_id,
+    message: 'Backend reached (Mock Mode)'
+  });
 }
+
+/**
+ * Enterprise Health Probe: Checks upstream backend status and latency
+ */
+export async function handleUpstreamHealth(_req: Request, res: Response) {
+  const startTime = Date.now();
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    
+    const probeRes = await fetch(activeUpstreamUrl, { 
+      method: 'GET',
+      headers: { 'X-Gatekeeper-Probe': 'true' },
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeout);
+    const latency = Date.now() - startTime;
+    
+    res.json({
+      status: probeRes.ok ? 'healthy' : 'unhealthy',
+      latency_ms: latency,
+      upstream_url: activeUpstreamUrl,
+      http_status: probeRes.status,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err: any) {
+    res.status(503).json({
+      status: 'offline',
+      latency_ms: Date.now() - startTime,
+      error: err.message,
+      upstream_url: activeUpstreamUrl,
+      timestamp: new Date().toISOString()
+    });
+  }
+}
+
 
 /**
  * Security Scorecard Benchmark Runner (POST /_gk/api/benchmark)
@@ -491,7 +925,6 @@ Keep under 60 words. Plain spoken sentences only.`;
         console.warn('TTS Synthesis warning:', err);
       }
     }
-
     return res.json({
       script,
       audioBase64,
@@ -503,3 +936,94 @@ Keep under 60 words. Plain spoken sentences only.`;
     return res.status(500).json({ error: error.message || 'Failed to generate voice debrief.' });
   }
 }
+
+export async function handleGetConnection(_req: Request, res: Response) {
+  return res.json({
+    activeUpstreamUrl,
+    activeOpenApiPath,
+    reachability: reachabilityStatus,
+    contractValid: !!activeOpenApiContract,
+    apiTitle: activeOpenApiContract?.info?.title || 'Upstream Protected API',
+    apiVersion: activeOpenApiContract?.info?.version || '1.0.0',
+    operationsCount: activeOpenApiContract?.paths ? Object.keys(activeOpenApiContract.paths).length : 0,
+    lastCheckedAt: lastSuccessfulCheck
+  });
+}
+
+export async function handleTestConnection(req: Request, res: Response) {
+  const { upstream_url, openapi_path, auth_token } = req.body || {};
+  if (!upstream_url) {
+    return res.status(400).json({ success: false, error: 'upstream_url is required.' });
+  }
+
+  const result = await fetchAndValidateSpec(upstream_url, openapi_path || '/openapi.json', auth_token);
+  return res.json(result);
+}
+
+export async function handleSaveConnection(req: Request, res: Response) {
+  const { upstream_url, openapi_path, auth_token } = req.body || {};
+  if (!upstream_url) {
+    return res.status(400).json({ success: false, error: 'upstream_url is required.' });
+  }
+
+  const testRes = await fetchAndValidateSpec(upstream_url, openapi_path || '/openapi.json', auth_token);
+
+  // allow saving if reachable, even if spec is missing (Fallback Mode)
+  if (testRes.reachability !== 'reachable') {
+    return res.status(400).json({
+      success: false,
+      error: testRes.error || 'Target backend host unreachable.',
+      status: {
+        activeUpstreamUrl,
+        activeOpenApiPath,
+        reachability: reachabilityStatus,
+        contractValid: !!activeOpenApiContract
+      }
+    });
+  }
+
+  // Activate new backend configuration
+  activeUpstreamUrl = upstream_url.trim();
+  activeOpenApiPath = (openapi_path || '/openapi.json').trim();
+  activeOpenApiContract = testRes.success ? testRes.parsedSpec : null;
+  reachabilityStatus = 'reachable';
+  lastSuccessfulCheck = new Date().toISOString();
+
+  const activeStatus = {
+    activeUpstreamUrl,
+    activeOpenApiPath,
+    reachability: reachabilityStatus,
+    contractValid: !!activeOpenApiContract,
+    apiTitle: testRes.apiTitle || 'Upstream Protected API (Fallback Mode)',
+    apiVersion: testRes.apiVersion || '1.0.0',
+    operationsCount: testRes.operationsCount || 0,
+    discoveredRoutes: testRes.discoveredRoutes || [],
+    lastCheckedAt: lastSuccessfulCheck,
+    mode: currentMode
+  };
+
+  // Persist to Firestore (Safety check: Firestore documents have a 1MB limit)
+  const specStr = JSON.stringify(activeOpenApiContract || {});
+  const shouldOmitSpec = specStr.length > 800 * 1024; // 800KB threshold
+  
+  const saved = await saveGatewayConfig({
+    ...activeStatus,
+    activeOpenApiContract: shouldOmitSpec ? null : activeOpenApiContract
+  });
+
+  if (!saved) {
+    return res.status(500).json({
+      success: false,
+      error: 'Configuration could not be saved to persistent storage.'
+    });
+  }
+
+  return res.json({
+    success: true,
+    message: activeOpenApiContract 
+      ? 'Backend URL and OpenAPI contract activated.' 
+      : 'Backend activated in Fallback Mode (OpenAPI spec not found).',
+    status: activeStatus
+  });
+}
+

@@ -10,121 +10,168 @@ interface ApiGatekeeperLogoProps {
 export const ApiGatekeeperLogo: React.FC<ApiGatekeeperLogoProps> = ({
   className = 'h-10 w-10',
   size = 40,
-  glow = true,
   showText = false,
 }) => {
   return (
     <div className="inline-flex items-center gap-3.5 group cursor-pointer select-none">
-      {/* High-Tech Shield Emblem Container */}
+      {/* Emblem Container */}
       <div
-        className={`relative flex items-center justify-center shrink-0 rounded-2xl bg-gradient-to-b from-slate-900 via-slate-950 to-black border border-red-500/60 shadow-xl shadow-red-950/80 group-hover:border-red-400 group-hover:scale-105 transition-all duration-300 ${className}`}
+        className={`relative flex items-center justify-center shrink-0 rounded-xl bg-slate-950 border border-red-900/60 shadow-md transition-all duration-300 group-hover:border-red-500/80 ${className}`}
         style={{ width: size, height: size }}
       >
-        {/* Ambient Neon Back-Glow */}
-        {glow && (
-          <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-red-600/40 via-red-500/20 to-amber-500/20 blur-md opacity-70 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-        )}
-
-        {/* High-Precision Cyber Vector SVG Logo */}
+        {/* Vector SVG Emblem Matching Uploaded Brand Asset Exactly */}
         <svg
           viewBox="0 0 100 100"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="relative z-10 w-full h-full p-1.5 drop-shadow-[0_2px_12px_rgba(239,68,68,0.7)]"
+          className="w-full h-full p-1"
         >
           <defs>
-            {/* Primary Dark Obsidian Armor Gradient */}
-            <linearGradient id="gkObsidianBase" x1="50" y1="5" x2="50" y2="95" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#31090f" />
-              <stop offset="45%" stopColor="#140408" />
-              <stop offset="100%" stopColor="#060102" />
-            </linearGradient>
-
-            {/* Glowing Crimson Perimeter Gradient */}
-            <linearGradient id="gkCrimsonStroke" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+            {/* Outer Armor Rim Red Gradient */}
+            <linearGradient id="shieldRim" x1="10" y1="5" x2="90" y2="95" gradientUnits="userSpaceOnUse">
               <stop offset="0%" stopColor="#f87171" />
-              <stop offset="40%" stopColor="#ef4444" />
-              <stop offset="80%" stopColor="#dc2626" />
+              <stop offset="35%" stopColor="#ef4444" />
+              <stop offset="70%" stopColor="#dc2626" />
               <stop offset="100%" stopColor="#991b1b" />
             </linearGradient>
 
-            {/* Gateway Laser Stream */}
-            <linearGradient id="gkLaserStream" x1="50" y1="20" x2="50" y2="80" gradientUnits="userSpaceOnUse">
+            {/* Pillar Red Metallic Gradient */}
+            <linearGradient id="pillarGrad" x1="50" y1="20" x2="50" y2="80" gradientUnits="userSpaceOnUse">
               <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="50%" stopColor="#ef4444" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#ef4444" />
+              <stop offset="80%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#7f1d1d" />
             </linearGradient>
 
-            {/* Core Fusion Reactor Glow */}
-            <radialGradient id="gkCorePulse" cx="50" cy="50" r="18" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="30%" stopColor="#f87171" />
-              <stop offset="65%" stopColor="#dc2626" />
-              <stop offset="100%" stopColor="#450a0a" stopOpacity="0" />
-            </radialGradient>
+            {/* Inner Left Dark Obsidian */}
+            <linearGradient id="obsidianLeft" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#1e2330" />
+              <stop offset="100%" stopColor="#0b0e14" />
+            </linearGradient>
+
+            {/* Inner Right Pitch Black */}
+            <linearGradient id="obsidianRight" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#0f131a" />
+              <stop offset="100%" stopColor="#040608" />
+            </linearGradient>
           </defs>
 
-          {/* Outer Angular Cyber Aegis Crest */}
+          {/* Outer Heavy Beveled Armor Shield Frame */}
           <path
-            d="M50 6L88 18V45C88 68 72 87 50 94C28 87 12 68 12 45V18L50 6Z"
-            fill="url(#gkObsidianBase)"
-            stroke="url(#gkCrimsonStroke)"
-            strokeWidth="3.5"
-            strokeLinejoin="round"
+            d="M50 4L88 18V28L92 32V42L88 46V54C88 74 70 90 50 96C30 90 12 74 12 54V46L8 42V32L12 28V18L50 4Z"
+            fill="url(#shieldRim)"
           />
 
-          {/* Inner Inset Defense Armor Plate */}
+          {/* Inner Inset Rim Border */}
           <path
-            d="M50 15L78 24V45C78 63 65 78 50 83C35 78 22 63 22 45V24L50 15Z"
-            fill="#0f0205"
+            d="M50 8L84 20.5V52C84 70 68 85 50 90.5C32 85 16 70 16 52V20.5L50 8Z"
+            fill="#080a0f"
+          />
+
+          {/* Split Obsidian Shield Face - Left Side */}
+          <path
+            d="M50 10L18 22V52C18 68.5 33 82.5 50 88V10Z"
+            fill="url(#obsidianLeft)"
+          />
+
+          {/* Split Obsidian Shield Face - Right Side */}
+          <path
+            d="M50 10L82 22V52C82 68.5 67 82.5 50 88V10Z"
+            fill="url(#obsidianRight)"
+          />
+
+          {/* Circuit Trace Branch Lines (Left Side) */}
+          <path
+            d="M37 38H27L22 38"
             stroke="#ef4444"
-            strokeWidth="1.5"
-            strokeOpacity="0.6"
-          />
-
-          {/* Gatekeeper Symmetrical Laser Portal Pillars */}
-          <path
-            d="M36 28V72M36 38L43 44M36 50L43 44"
-            stroke="url(#gkLaserStream)"
-            strokeWidth="3"
+            strokeWidth="2.5"
             strokeLinecap="round"
-            strokeLinejoin="round"
           />
           <path
-            d="M64 28V72M64 38L57 44M64 50L57 44"
-            stroke="url(#gkLaserStream)"
-            strokeWidth="3"
+            d="M37 50H26L20 50"
+            stroke="#ef4444"
+            strokeWidth="2.5"
             strokeLinecap="round"
-            strokeLinejoin="round"
+          />
+          <path
+            d="M37 62H27L22 62"
+            stroke="#ef4444"
+            strokeWidth="2.5"
+            strokeLinecap="round"
           />
 
-          {/* Gateway Horizontal Energy Laser Beams */}
-          <line x1="39" y1="26" x2="61" y2="26" stroke="#fca5a5" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="39" y1="74" x2="61" y2="74" stroke="#fca5a5" strokeWidth="2.5" strokeLinecap="round" />
+          {/* Circuit Trace Branch Lines (Right Side) */}
+          <path
+            d="M63 38H73L78 38"
+            stroke="#ef4444"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M63 50H74L80 50"
+            stroke="#ef4444"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M63 62H73L78 62"
+            stroke="#ef4444"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
 
-          {/* Center Firewall Neural Reactor Core */}
-          <circle cx="50" cy="50" r="10" fill="#2a080c" stroke="#f87171" strokeWidth="2" />
-          <circle cx="50" cy="50" r="6" fill="url(#gkCorePulse)" />
-          <circle cx="50" cy="50" r="2" fill="#ffffff" />
+          {/* 3 Left Circular Circuit Nodes */}
+          <circle cx="22" cy="38" r="4.5" fill="#ef4444" stroke="#fca5a5" strokeWidth="1.5" />
+          <circle cx="22" cy="38" r="2" fill="#ffffff" />
 
-          {/* Node Sensor Lights */}
-          <circle cx="50" cy="11" r="2.5" fill="#fca5a5" />
-          <circle cx="88" cy="18" r="2" fill="#ef4444" />
-          <circle cx="12" cy="18" r="2" fill="#ef4444" />
+          <circle cx="20" cy="50" r="4.5" fill="#ef4444" stroke="#fca5a5" strokeWidth="1.5" />
+          <circle cx="20" cy="50" r="2" fill="#ffffff" />
+
+          <circle cx="22" cy="62" r="4.5" fill="#ef4444" stroke="#fca5a5" strokeWidth="1.5" />
+          <circle cx="22" cy="62" r="2" fill="#ffffff" />
+
+          {/* 3 Right Circular Circuit Nodes */}
+          <circle cx="78" cy="38" r="4.5" fill="#ef4444" stroke="#fca5a5" strokeWidth="1.5" />
+          <circle cx="78" cy="38" r="2" fill="#ffffff" />
+
+          <circle cx="80" cy="50" r="4.5" fill="#ef4444" stroke="#fca5a5" strokeWidth="1.5" />
+          <circle cx="80" cy="50" r="2" fill="#ffffff" />
+
+          <circle cx="78" cy="62" r="4.5" fill="#ef4444" stroke="#fca5a5" strokeWidth="1.5" />
+          <circle cx="78" cy="62" r="2" fill="#ffffff" />
+
+          {/* Center 3 Vertical Angled Pillars */}
+          {/* Left Pillar */}
+          <path
+            d="M37 34L43 30V68L37 64Z"
+            fill="url(#pillarGrad)"
+            stroke="#f87171"
+            strokeWidth="0.8"
+          />
+
+          {/* Middle Pillar (Tallest Pointed Center) */}
+          <path
+            d="M47 28L50 23L53 28V72L50 75L47 72Z"
+            fill="url(#pillarGrad)"
+            stroke="#fca5a5"
+            strokeWidth="1"
+          />
+
+          {/* Right Pillar */}
+          <path
+            d="M57 30L63 34V64L57 68Z"
+            fill="url(#pillarGrad)"
+            stroke="#f87171"
+            strokeWidth="0.8"
+          />
         </svg>
-
-        {/* Gloss Overlay */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none" />
       </div>
 
-      {/* Optional Integrated Typography */}
+      {/* Integrated Typography */}
       {showText && (
         <div className="flex flex-col text-left">
-          <span className="text-base sm:text-lg font-black tracking-widest text-white uppercase font-mono leading-none drop-shadow-sm">
+          <span className="text-base sm:text-lg font-black tracking-widest text-white uppercase font-mono leading-none">
             API GATEKEEPER
-          </span>
-          <span className="text-[10px] sm:text-xs tracking-wider text-red-400 font-bold uppercase font-mono mt-1">
-            Autonomous WAF Perimeter
           </span>
         </div>
       )}

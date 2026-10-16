@@ -302,78 +302,220 @@ export const KNOWN_ENDPOINTS = [
   { method: 'POST', pattern: /^\/api\/login\/?$/ },
   { method: 'POST', pattern: /^\/api\/register\/?$/ },
   { method: 'POST', pattern: /^\/api\/feedback\/?$/ },
-  { method: 'GET', pattern: /^\/api\/orders\/[a-zA-Z0-9_-]+$/ }
+  { method: 'GET', pattern: /^\/api\/orders\/[a-zA-Z0-9_-]+$/ },
+  { method: 'PUT', pattern: /^\/api\/v1\/user\/profile\/?$/ },
+  { method: 'POST', pattern: /^\/v1\/chat\/completions\/?$/ },
+  { method: 'GET', pattern: /^\/api\/v1\/resource\/?$/ },
+  { method: 'POST', pattern: /^\/api\/v1\/auth\/login\/?$/ },
+  { method: 'GET', pattern: /^\/api\/v1\/users\/export\/?$/ },
+  { method: 'GET', pattern: /^\/api\/v1\/accounts\/[a-zA-Z0-9_-]+\/statement\/?$/ },
+  { method: 'POST', pattern: /^\/api\/v1\/admin\/settings\/?$/ },
+  { method: 'POST', pattern: /^\/graphql\/?$/ },
+  { method: 'POST', pattern: /^\/api\/v1\/checkout\/?$/ },
+  { method: 'GET', pattern: /^\/api\/v1\/[a-zA-Z0-9_/-]+$/ },
+  { method: 'POST', pattern: /^\/api\/v1\/[a-zA-Z0-9_/-]+$/ },
+  { method: 'PUT', pattern: /^\/api\/v1\/[a-zA-Z0-9_/-]+$/ }
 ];
 
 /**
  * Evaluates request against OpenAPI Contract Guard
  */
-export function evaluateContract(ctx: InspectionContext): Finding[] {
+export function evaluateContract(ctx: InspectionContext, contract?: any): Finding[] {
   const findings: Finding[] = [];
   
   // Skip control plane routes
   if (ctx.path.startsWith('/_gk/')) return findings;
 
-  // 1. Unknown endpoint check
-  const endpointMatches = KNOWN_ENDPOINTS.some(
-    ep => ep.method === ctx.method && ep.pattern.test(ctx.path)
-  );
+  // Use dynamic contract if provided, fallback to KNOWN_ENDPOINTS
+  if (contract && contract.paths) {
+    // 1. Precise OpenAPI Path & Method Matching
+    const pathTemplates = Object.keys(contract.paths);
+    let matchedTemplate: string | null = null;
+    let pathParams: Record<string, string> = {};
 
-  if (!endpointMatches) {
-    findings.push({
-      layer: 'contract',
-      rule_id: 'CONTRACT-UNKNOWN-ENDPOINT',
-      name: 'Undocumented or Disallowed API Endpoint',
-      category: 'contract',
-      score: 5,
-      matched: `${ctx.method} ${ctx.path}`,
-      target: 'path',
-      cwe: 'CWE-1059',
-      owasp: 'API9:2023',
-      attack: 'T1595',
-      severity: 'critical'
-    });
-    return findings;
-  }
-
-  // 2. Sensitive field injection (Mass Assignment) in Body
-  if (ctx.body && typeof ctx.body === 'object') {
-    const { keys } = flattenObject(ctx.body);
-    for (const key of keys) {
-      const lower = key.toLowerCase();
-      if (SENSITIVE_FIELDS.some(sf => sf.toLowerCase() === lower)) {
-        findings.push({
-          layer: 'contract',
-          rule_id: 'CONTRACT-SENSITIVE-FIELD',
-          name: `Mass Assignment: Injected Sensitive Field '${key}'`,
-          category: 'mass_assignment',
-          score: 5,
-          matched: `Field: ${key}`,
-          target: 'body',
-          cwe: 'CWE-915',
-          owasp: 'API3:2023',
-          attack: 'T1190',
-          severity: 'critical'
-        });
+    for (const template of pathTemplates) {
+      // Convert {id} to regex named groups or matching groups
+      const regexStr = '^' + template.replace(/\{([a-zA-Z0-9_-]+)\}/g, '(?<$1>[^/]+)') + '/?$';
+      const regex = new RegExp(regexStr);
+      const match = ctx.path.match(regex);
+      if (match) {
+        matchedTemplate = template;
+        pathParams = match.groups || {};
+        break;
       }
     }
-  }
 
-  // 3. Schema type checks (e.g. limit must be positive integer)
-  if (ctx.query && ctx.query.limit) {
-    if (!/^\d+$/.test(ctx.query.limit)) {
+    if (!matchedTemplate) {
       findings.push({
         layer: 'contract',
-        rule_id: 'CONTRACT-SCHEMA',
-        name: "Schema Type Violation: 'limit' parameter must be an integer",
+        rule_id: 'CONTRACT-UNKNOWN-ENDPOINT',
+        name: 'Undocumented API Endpoint',
+        category: 'contract',
+        score: 5,
+        matched: `${ctx.method} ${ctx.path}`,
+        target: 'path',
+        cwe: 'CWE-1059',
+        owasp: 'API9:2023',
+        severity: 'critical'
+      });
+      return findings;
+    }
+
+    const pathSpec = contract.paths[matchedTemplate];
+    const methodSpec = pathSpec[ctx.method.toLowerCase()];
+
+    if (!methodSpec) {
+      findings.push({
+        layer: 'contract',
+        rule_id: 'CONTRACT-DISALLOWED-METHOD',
+        name: `Method ${ctx.method} Not Allowed for Path`,
         category: 'contract',
         score: 4,
-        matched: `limit=${ctx.query.limit}`,
-        target: 'query',
+        matched: `${ctx.method} ${ctx.path}`,
+        target: 'method',
         cwe: 'CWE-1059',
         owasp: 'API9:2023',
         severity: 'high'
       });
+      return findings;
+    }
+
+    // 2. Required Parameter Checks (Query & Header)
+    const parameters = [...(pathSpec.parameters || []), ...(methodSpec.parameters || [])];
+    for (const param of parameters) {
+      if (param.required) {
+        let value = null;
+        if (param.in === 'query') value = ctx.query[param.name];
+        if (param.in === 'header') value = ctx.headers[param.name.toLowerCase()];
+        if (param.in === 'path') value = pathParams[param.name];
+
+        if (value === undefined || value === null || value === '') {
+          findings.push({
+            layer: 'contract',
+            rule_id: 'CONTRACT-MISSING-PARAM',
+            name: `Required ${param.in} parameter '${param.name}' is missing`,
+            category: 'contract',
+            score: 3,
+            matched: param.name,
+            target: param.in,
+            cwe: 'CWE-20',
+            owasp: 'API3:2023',
+            severity: 'high'
+          });
+        }
+      }
+
+      // Basic Type Constraints (integer)
+      if (param.schema?.type === 'integer') {
+        const val = param.in === 'query' ? ctx.query[param.name] : (param.in === 'path' ? pathParams[param.name] : null);
+        if (val && !/^-?\d+$/.test(val)) {
+          findings.push({
+            layer: 'contract',
+            rule_id: 'CONTRACT-TYPE-MISMATCH',
+            name: `Parameter '${param.name}' must be an integer`,
+            category: 'contract',
+            score: 2,
+            matched: `${param.name}=${val}`,
+            target: param.in,
+            cwe: 'CWE-20',
+            owasp: 'API3:2023',
+            severity: 'medium'
+          });
+        }
+      }
+    }
+
+    // 3. Body Validation (Mass Assignment & Required Fields)
+    if (ctx.body && methodSpec.requestBody) {
+      const content = methodSpec.requestBody.content || {};
+      const schema = content['application/json']?.schema;
+      if (schema && schema.type === 'object' && typeof ctx.body === 'object') {
+        const providedKeys = Object.keys(ctx.body);
+        
+        // Required body properties
+        if (schema.required) {
+          for (const req of schema.required) {
+            if (!(req in ctx.body)) {
+              findings.push({
+                layer: 'contract',
+                rule_id: 'CONTRACT-MISSING-BODY-FIELD',
+                name: `Required body field '${req}' is missing`,
+                category: 'contract',
+                score: 3,
+                matched: req,
+                target: 'body',
+                cwe: 'CWE-20',
+                owasp: 'API3:2023',
+                severity: 'high'
+              });
+            }
+          }
+        }
+
+        // Additional properties (Mass Assignment prevention if additionalProperties: false)
+        if (schema.additionalProperties === false) {
+          const allowed = new Set(Object.keys(schema.properties || {}));
+          for (const key of providedKeys) {
+            if (!allowed.has(key)) {
+              findings.push({
+                layer: 'contract',
+                rule_id: 'CONTRACT-MASS-ASSIGNMENT',
+                name: `Mass Assignment: Field '${key}' is not allowed by contract`,
+                category: 'mass_assignment',
+                score: 5,
+                matched: key,
+                target: 'body',
+                cwe: 'CWE-915',
+                owasp: 'API3:2023',
+                severity: 'critical'
+              });
+            }
+          }
+        }
+      }
+    }
+  } else {
+    // Fallback to static KNOWN_ENDPOINTS (legacy mode)
+    const endpointMatches = KNOWN_ENDPOINTS.some(
+      ep => ep.method === ctx.method && ep.pattern.test(ctx.path)
+    );
+
+    if (!endpointMatches) {
+      findings.push({
+        layer: 'contract',
+        rule_id: 'CONTRACT-UNKNOWN-ENDPOINT',
+        name: 'Undocumented or Disallowed API Endpoint',
+        category: 'contract',
+        score: 5,
+        matched: `${ctx.method} ${ctx.path}`,
+        target: 'path',
+        cwe: 'CWE-1059',
+        owasp: 'API9:2023',
+        severity: 'critical'
+      });
+      return findings;
+    }
+
+    // 2. Sensitive field injection (Mass Assignment) in Body
+    if (ctx.body && typeof ctx.body === 'object') {
+      const { keys } = flattenObject(ctx.body);
+      for (const key of keys) {
+        const lower = key.toLowerCase();
+        if (SENSITIVE_FIELDS.some(sf => sf.toLowerCase() === lower)) {
+          findings.push({
+            layer: 'contract',
+            rule_id: 'CONTRACT-SENSITIVE-FIELD',
+            name: `Mass Assignment: Injected Sensitive Field '${key}'`,
+            category: 'mass_assignment',
+            score: 5,
+            matched: `Field: ${key}`,
+            target: 'body',
+            cwe: 'CWE-915',
+            owasp: 'API3:2023',
+            severity: 'critical'
+          });
+        }
+      }
     }
   }
 
@@ -509,3 +651,70 @@ export class TokenBucket {
     return false;
   }
 }
+
+/**
+ * Enterprise Response Shield: Detects and masks PII in upstream responses
+ */
+export function maskSensitiveData(content: string): { masked: string; findings: string[] } {
+  const findings: string[] = [];
+  let masked = content;
+
+  // 1. Mask SSNs (xxx-xx-xxxx or xxx xx xxxx)
+  const ssnRegex = /\b\d{3}[- ]\d{2}[- ]\d{4}\b/g;
+  if (ssnRegex.test(content)) {
+    findings.push('Detected SSN patterns');
+    masked = masked.replace(ssnRegex, 'XXX-XX-XXXX');
+  }
+
+  // 2. Mask Credit Cards (Basic Luhn-like patterns)
+  const ccRegex = /\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})\b/g;
+  if (ccRegex.test(content)) {
+    findings.push('Detected Credit Card numbers');
+    masked = masked.replace(ccRegex, 'XXXX-XXXX-XXXX-XXXX');
+  }
+
+  // 3. Mask Potential API Keys / Secrets
+  const secretRegex = /\b(?:sk_live|pk_live|secret|key|token)_[a-zA-Z0-9]{20,}\b/gi;
+  if (secretRegex.test(content)) {
+    findings.push('Detected sensitive API keys/secrets');
+    masked = masked.replace(secretRegex, (match) => match.split('_')[0] + '_REDACTED');
+  }
+
+  // 4. Mask Email Addresses (PII)
+  const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+  if (emailRegex.test(content)) {
+    findings.push('Detected email addresses');
+    masked = masked.replace(emailRegex, (match) => {
+      const [user, domain] = match.split('@');
+      return user.charAt(0) + '***@' + domain;
+    });
+  }
+
+  return { masked, findings };
+}
+
+/**
+ * CIDR-aware IP Check for Enterprise network isolation
+ */
+export function ipInCidr(ip: string, cidr: string): boolean {
+  try {
+    const [range, bitsStr] = cidr.split('/');
+    const bits = parseInt(bitsStr, 10);
+    
+    if (isNaN(bits)) return ip === cidr;
+
+    const ipParts = ip.split('.').map(Number);
+    const rangeParts = range.split('.').map(Number);
+
+    if (ipParts.length !== 4 || rangeParts.length !== 4) return false;
+
+    const ipInt = (ipParts[0] << 24) | (ipParts[1] << 16) | (ipParts[2] << 8) | ipParts[3];
+    const rangeInt = (rangeParts[0] << 24) | (rangeParts[1] << 16) | (rangeParts[2] << 8) | rangeParts[3];
+
+    const mask = ~( (1 << (32 - bits)) - 1 );
+    return (ipInt & mask) === (rangeInt & mask);
+  } catch {
+    return false;
+  }
+}
+

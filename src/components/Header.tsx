@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/90 bg-slate-950/90 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-8 lg:px-12">
         {/* Zone 1: Brand Logo & Uppercase Wordmark */}
         <div className="flex items-center gap-3 shrink-0">
           <a
@@ -60,10 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <div className="flex flex-col">
               <span className="text-sm sm:text-base font-black tracking-widest text-white uppercase font-mono">
-                API GATEKEEPER
-              </span>
-              <span className="text-[10px] tracking-wider text-slate-400 uppercase font-mono">
-                Autonomous WAF Perimeter
+                API SENTINEL
               </span>
             </div>
           </a>
@@ -77,9 +74,12 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Zone 2: Primary Clean Navigation Tabs (Geo Heatmap removed) */}
-        <nav className="hidden lg:flex items-center gap-2 xl:gap-3 text-xs font-semibold">
+        <nav className="hidden lg:flex items-center gap-2 xl:gap-3 text-xs font-semibold" role="tablist" aria-label="Main Navigation">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'dashboard'}
+            aria-controls="panel-dashboard"
             onClick={() => onTabChange('dashboard')}
             className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
               activeTab === 'dashboard'
@@ -92,6 +92,9 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'tester'}
+            aria-controls="panel-tester"
             onClick={() => onTabChange('tester')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeTab === 'tester'
@@ -106,6 +109,9 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'simulator'}
+            aria-controls="panel-simulator"
             onClick={() => onTabChange('simulator')}
             className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
               activeTab === 'simulator'
@@ -118,6 +124,9 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'rules'}
+            aria-controls="panel-rules"
             onClick={() => onTabChange('rules')}
             className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
               activeTab === 'rules'
@@ -125,11 +134,14 @@ export const Header: React.FC<HeaderProps> = ({
                 : 'text-slate-300 hover:text-white hover:bg-slate-900'
             }`}
           >
-            WAF Rules
+            Rules
           </button>
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'voice'}
+            aria-controls="panel-voice"
             onClick={() => onTabChange('voice')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
               activeTab === 'voice'
@@ -139,10 +151,25 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <span>Voice Sentinel</span>
             {isSpeaking && (
-              <span className="text-amber-300 animate-pulse">
+              <span className="text-amber-300 animate-pulse" aria-label="Sentinel is speaking">
                 <Volume2 className="h-3.5 w-3.5" />
               </span>
             )}
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'connect'}
+            aria-controls="panel-connect"
+            onClick={() => onTabChange('connect')}
+            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+              activeTab === 'connect'
+                ? 'bg-red-600 text-white font-bold shadow-sm shadow-red-900/40'
+                : 'text-slate-300 hover:text-white hover:bg-slate-900'
+            }`}
+          >
+            Connect API
           </button>
         </nav>
 
@@ -160,16 +187,16 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="hidden sm:inline">Reset</span>
           </button>
 
-          {/* Run 12-Probe Suite Button */}
+          {/* Run 21-Probe Suite Button */}
           <button
             type="button"
             onClick={onRunSim}
             disabled={isSimulating}
             className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-red-500 disabled:opacity-50 transition-colors whitespace-nowrap cursor-pointer"
-            title="Dispatches 12 HTTP requests: 10 attack vectors (blocked) + 2 benign controls (allowed)"
+            title="Dispatches 21 HTTP requests: 18 attack vectors + 3 benign controls"
           >
             <Play className="h-3 w-3 fill-white" />
-            <span>{isSimulating ? 'Testing...' : 'Run 12-Probe Suite'}</span>
+            <span>{isSimulating ? 'Testing...' : 'Run 21-Probe Suite'}</span>
           </button>
 
           {/* Operator Profile & Logout Controls */}
@@ -230,7 +257,7 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={() => onTabChange('rules')}
           className={`px-2.5 py-1 rounded whitespace-nowrap ${activeTab === 'rules' ? 'bg-red-600 text-white font-bold' : 'text-slate-400'}`}
         >
-          WAF Rules
+          Rules
         </button>
         <button
           type="button"
@@ -238,6 +265,13 @@ export const Header: React.FC<HeaderProps> = ({
           className={`px-2.5 py-1 rounded whitespace-nowrap ${activeTab === 'voice' ? 'bg-red-600 text-white font-bold' : 'text-slate-400'}`}
         >
           Voice Sentinel
+        </button>
+        <button
+          type="button"
+          onClick={() => onTabChange('connect')}
+          className={`px-2.5 py-1 rounded whitespace-nowrap ${activeTab === 'connect' ? 'bg-red-600 text-white font-bold' : 'text-slate-400'}`}
+        >
+          Connect API
         </button>
       </div>
     </header>

